@@ -1,6 +1,6 @@
 /**
  * Online Examination System - Initial Data Store
- * Contains predefined student accounts, examiner accounts, and university examination configurations.
+ * Contains predefined student accounts, admin accounts, examiner accounts, and examinations.
  */
 
 const INITIAL_DATA = {
@@ -28,6 +28,16 @@ const INITIAL_DATA = {
       academicYear: "2025-2026"
     },
     {
+      id: "ADMIN2026",
+      name: "Prof. S. Narayanan",
+      role: "admin",
+      password: "admin123",
+      email: "controller.exams@university.edu",
+      rollNo: "ADM-EXAM-001",
+      department: "Office of the Controller of Examinations",
+      designation: "Chief Controller of Examinations"
+    },
+    {
       id: "EXAM2026",
       name: "Dr. K. Ramanathan",
       role: "examiner",
@@ -46,9 +56,10 @@ const INITIAL_DATA = {
       title: "Data Structures & Algorithms",
       department: "Computer Science & Engineering",
       date: "2026-11-15",
-      durationMinutes: 15, // 15 mins by default
+      durationMinutes: 15,
       totalMarks: 20,
       passingMarks: 10,
+      status: "available", // available, upcoming, completed
       instructions: [
         "Ensure a stable internet connection before commencing. If internet is temporarily lost, all your answers are preserved locally.",
         "The examination contains both Objective (Multiple Choice) and Descriptive questions.",
@@ -141,10 +152,11 @@ const INITIAL_DATA = {
       code: "CS402",
       title: "Database Management Systems",
       department: "Computer Science & Engineering",
-      date: "2026-11-18",
+      date: "2026-11-25",
       durationMinutes: 20,
       totalMarks: 20,
       passingMarks: 10,
+      status: "upcoming",
       instructions: [
         "Answer all questions within the allocated time of 20 minutes.",
         "Contains 3 Objective questions (2 marks each) and 2 Descriptive questions (7 marks each).",
@@ -223,6 +235,7 @@ const INITIAL_DATA = {
       durationMinutes: 15,
       totalMarks: 20,
       passingMarks: 10,
+      status: "available",
       instructions: [
         "This examination has already been conducted, submitted, and fully evaluated by the examiner.",
         "You can inspect this record to see the published results, marks breakdown, and examiner feedback."
@@ -269,12 +282,14 @@ const INITIAL_DATA = {
     }
   ],
 
-  // Sample pre-evaluated submission for EXAM-CS403
   sampleSubmissions: [
     {
       submissionId: "SUB-SAMPLE-001",
       examId: "EXAM-CS403",
       studentId: "STU202601",
+      studentName: "Priya Sharma",
+      studentRoll: "2026-CS-042",
+      department: "Computer Science & Engineering",
       submittedAt: "2026-11-05T10:28:45.000Z",
       submissionType: "manual",
       timeTakenMinutes: 14,
@@ -308,4 +323,3 @@ const INITIAL_DATA = {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = INITIAL_DATA;
 }
-

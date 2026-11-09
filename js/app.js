@@ -1,10 +1,21 @@
 /**
- * Online Examination System - Pure HTML & JavaScript Application Logic
- * No external CSS or stylesheets required.
- * Implements: Authentication, Examination Dashboard, Real-time Auto-save,
- * Timer with Auto-submission on expiry, Offline detection & recovery,
- * One-by-One / All Questions navigation, Objective Auto-evaluation,
- * Examiner Descriptive Evaluation, and Result Publishing.
+ * Online Examination System - 10-Page Unified Application Logic
+ * 
+ * Student Section (6 pages):
+ *  1. Login / Register (Student authentication & registration)
+ *  2. Student Dashboard (Available and upcoming exams)
+ *  3. Exam Instructions (Rules, duration, and exam details)
+ *  4. Examination Page (Display questions, timer, auto-save, answer selection)
+ *  5. Review & Submit (Review and modify answers before submission)
+ *  6. Results Page (Display marks and examination results)
+ * 
+ * Admin Section (3 pages):
+ *  7. Admin Dashboard (Statistics and examination overview)
+ *  8. Manage Examinations (Create, edit, and delete examinations)
+ *  9. Manage Questions (Add MCQs and descriptive questions)
+ * 
+ * Examiner Section (1 page):
+ *  10. Evaluate Answers (Check descriptive answers and assign marks)
  */
 
 (function () {
@@ -13,6 +24,8 @@
   // Storage Keys
   const STORAGE_KEY_USER = 'oes_current_user';
   const STORAGE_KEY_SUBMISSIONS = 'oes_submissions';
+  const STORAGE_KEY_EXAMS = 'oes_examinations';
+  const STORAGE_KEY_USERS = 'oes_users';
   const STORAGE_KEY_SESSION_PREFIX = 'oes_exam_session_';
 
   // Application State
@@ -20,31 +33,61 @@
     currentUser: null,
     currentExam: null,
     currentQuestionIndex: 0,
-    viewMode: 'one-by-one', // 'one-by-one' or 'all'
-    answers: {},            // { [questionId]: string }
-    reviewFlags: {},        // { [questionId]: boolean }
-    visitedQuestions: {},   // { [questionId]: boolean }
+    viewMode: 'one-by-one',
+    answers: {},
+    reviewFlags: {},
+    visitedQuestions: {},
     timeRemainingSeconds: 0,
     timerInterval: null,
     autoSaveInterval: null,
     isOfflineSimulated: false,
-    lastSavedTimestamp: null
+    lastSavedTimestamp: null,
+    selectedQuestionExamId: null
   };
 
   /* -------------------------------------------------------------
    * 1. Storage & State Initialization
    * ----------------------------------------------------------- */
-  function initializeSubmissions() {
+  function initializeData() {
+    if (!localStorage.getItem(STORAGE_KEY_USERS)) {
+      localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(INITIAL_DATA.users || []));
+    }
+    if (!localStorage.getItem(STORAGE_KEY_EXAMS)) {
+      localStorage.setItem(STORAGE_KEY_EXAMS, JSON.stringify(INITIAL_DATA.examinations || []));
+    }
     if (!localStorage.getItem(STORAGE_KEY_SUBMISSIONS)) {
-      localStorage.setItem(
-        STORAGE_KEY_SUBMISSIONS,
-        JSON.stringify(INITIAL_DATA.sampleSubmissions || [])
-      );
+      localStorage.setItem(STORAGE_KEY_SUBMISSIONS, JSON.stringify(INITIAL_DATA.sampleSubmissions || []));
     }
   }
 
+  function getUsers() {
+    initializeData();
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY_USERS)) || [];
+    } catch (e) {
+      return INITIAL_DATA.users;
+    }
+  }
+
+  function saveUsers(users) {
+    localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(users));
+  }
+
+  function getExaminations() {
+    initializeData();
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY_EXAMS)) || [];
+    } catch (e) {
+      return INITIAL_DATA.examinations;
+    }
+  }
+
+  function saveExaminations(exams) {
+    localStorage.setItem(STORAGE_KEY_EXAMS, JSON.stringify(exams));
+  }
+
   function getSubmissions() {
-    initializeSubmissions();
+    initializeData();
     try {
       return JSON.parse(localStorage.getItem(STORAGE_KEY_SUBMISSIONS)) || [];
     } catch (e) {
@@ -62,36 +105,45 @@
       try {
         state.currentUser = JSON.parse(savedUserJson);
         updateUserHeader();
-        navigateView(state.currentUser.role === 'examiner' ? 'examiner-dashboard' : 'student-dashboard');
+        if (state.currentUser.role === 'admin') {
+          navigateToPage('page-admin-dashboard');
+        } else if (state.currentUser.role === 'examiner') {
+          navigateToPage('page-evaluate-answers');
+        } else {
+          navigateToPage('page-student-dashboard');
+        }
       } catch (e) {
         state.currentUser = null;
+        navigateToPage('page-login-register');
       }
     } else {
-      navigateView('login-view');
+      navigateToPage('page-login-register');
     }
   }
 
   /* -------------------------------------------------------------
-   * 2. View Navigation Router (Using Native HTML hidden Attribute)
+   * 2. Page Router & Header Navigation
    * ----------------------------------------------------------- */
-  function navigateView(viewId) {
-    const views = [
-      'login-view',
-      'student-dashboard',
-      'exam-instructions-view',
-      'active-exam-view',
-      'review-submit-modal',
-      'result-view',
-      'examiner-dashboard',
-      'examiner-evaluate-view'
-    ];
+  const ALL_PAGES = [
+    'page-login-register',     // Page 1
+    'page-student-dashboard',  // Page 2
+    'page-exam-instructions',  // Page 3
+    'page-examination',        // Page 4
+    'page-review-submit',      // Page 5
+    'page-results',            // Page 6
+    'page-admin-dashboard',    // Page 7
+    'page-manage-exams',       // Page 8
+    'page-manage-questions',   // Page 9
+    'page-evaluate-answers'    // Page 10
+  ];
 
-    views.forEach(id => {
+  function navigateToPage(pageId) {
+    ALL_PAGES.forEach(id => {
       const el = document.getElementById(id);
       if (el) el.hidden = true;
     });
 
-    const targetEl = document.getElementById(viewId);
+    const targetEl = document.getElementById(pageId);
     if (targetEl) {
       targetEl.hidden = false;
       window.scrollTo(0, 0);
@@ -99,44 +151,110 @@
 
     updateUserHeader();
 
-    if (viewId === 'student-dashboard') {
+    // Trigger page-specific initializers
+    if (pageId === 'page-student-dashboard') {
       renderStudentDashboard();
-    } else if (viewId === 'examiner-dashboard') {
+    } else if (pageId === 'page-admin-dashboard') {
+      renderAdminDashboard();
+    } else if (pageId === 'page-manage-exams') {
+      renderManageExams();
+    } else if (pageId === 'page-manage-questions') {
+      renderManageQuestions();
+    } else if (pageId === 'page-evaluate-answers') {
       renderExaminerDashboard();
     }
   }
 
   function updateUserHeader() {
+    const navLinks = document.getElementById('header-nav-links');
     const userBadge = document.getElementById('header-user-badge');
     const userNameSpan = document.getElementById('header-user-name');
     const userRoleSpan = document.getElementById('header-user-role');
+    const logoutBtn = document.getElementById('header-logout-btn');
 
     if (state.currentUser) {
-      if (userBadge) userBadge.hidden = false;
-      if (userNameSpan) userNameSpan.textContent = state.currentUser.name;
-      if (userRoleSpan) {
-        userRoleSpan.textContent = state.currentUser.role === 'examiner' ? '[Role: Examiner]' : '[Role: Student]';
+      userBadge.hidden = false;
+      logoutBtn.hidden = false;
+      userNameSpan.textContent = state.currentUser.name;
+
+      if (state.currentUser.role === 'admin') {
+        userRoleSpan.textContent = 'Admin';
+        userRoleSpan.className = 'badge badge-warning';
+        navLinks.innerHTML = `
+          <button type="button" class="nav-link-btn" onclick="app.navigateToPage('page-admin-dashboard')">Admin Dashboard (7)</button>
+          <button type="button" class="nav-link-btn" onclick="app.navigateToPage('page-manage-exams')">Manage Exams (8)</button>
+          <button type="button" class="nav-link-btn" onclick="app.navigateToPage('page-manage-questions')">Manage Questions (9)</button>
+        `;
+      } else if (state.currentUser.role === 'examiner') {
+        userRoleSpan.textContent = 'Examiner';
+        userRoleSpan.className = 'badge badge-warning';
+        navLinks.innerHTML = `
+          <button type="button" class="nav-link-btn" onclick="app.navigateToPage('page-evaluate-answers')">Evaluate Answers (10)</button>
+        `;
+      } else {
+        userRoleSpan.textContent = 'Student';
+        userRoleSpan.className = 'badge badge-info';
+        navLinks.innerHTML = `
+          <button type="button" class="nav-link-btn" onclick="app.navigateToPage('page-student-dashboard')">Dashboard (2)</button>
+          <button type="button" class="nav-link-btn" onclick="app.viewSampleResult()">Results (6)</button>
+        `;
       }
+      navLinks.hidden = false;
     } else {
-      if (userBadge) userBadge.hidden = true;
+      userBadge.hidden = true;
+      logoutBtn.hidden = true;
+      navLinks.hidden = true;
+    }
+  }
+
+  function toggleStyles() {
+    const link = document.getElementById('main-stylesheet');
+    const btn = document.getElementById('toggle-styles-btn');
+    if (!link) return;
+
+    if (link.disabled) {
+      link.disabled = false;
+      if (btn) btn.textContent = 'Toggle CSS (On/Off)';
+    } else {
+      link.disabled = true;
+      if (btn) btn.textContent = 'Styles: OFF (Pure HTML)';
     }
   }
 
   /* -------------------------------------------------------------
-   * 3. Authentication Handlers
+   * PAGE 1: Login / Register (Student authentication)
    * ----------------------------------------------------------- */
+  function switchAuthTab(tab) {
+    const loginBtn = document.getElementById('tab-login-btn');
+    const registerBtn = document.getElementById('tab-register-btn');
+    const loginBox = document.getElementById('auth-login-box');
+    const registerBox = document.getElementById('auth-register-box');
+
+    if (tab === 'register') {
+      loginBtn.classList.remove('active');
+      registerBtn.classList.add('active');
+      loginBox.hidden = true;
+      registerBox.hidden = false;
+    } else {
+      registerBtn.classList.remove('active');
+      loginBtn.classList.add('active');
+      registerBox.hidden = true;
+      loginBox.hidden = false;
+    }
+  }
+
   function handleLogin(event) {
     if (event) event.preventDefault();
     const userIdInput = document.getElementById('login-userid');
     const passwordInput = document.getElementById('login-password');
     const errorAlert = document.getElementById('login-error');
-    const errorText = document.getElementById('login-error-text');
 
     const enteredId = (userIdInput.value || '').trim();
     const enteredPassword = (passwordInput.value || '').trim();
 
-    const user = INITIAL_DATA.users.find(
-      u => u.id.toLowerCase() === enteredId.toLowerCase() && u.password === enteredPassword
+    const users = getUsers();
+    const user = users.find(
+      u => (u.id.toLowerCase() === enteredId.toLowerCase() || u.email.toLowerCase() === enteredId.toLowerCase()) && u.password === enteredPassword
     );
 
     if (user) {
@@ -146,18 +264,70 @@
       userIdInput.value = '';
       passwordInput.value = '';
 
-      if (user.role === 'examiner') {
-        navigateView('examiner-dashboard');
+      if (user.role === 'admin') {
+        navigateToPage('page-admin-dashboard');
+      } else if (user.role === 'examiner') {
+        navigateToPage('page-evaluate-answers');
       } else {
-        navigateView('student-dashboard');
+        navigateToPage('page-student-dashboard');
       }
     } else {
-      if (errorText) errorText.textContent = 'Invalid credentials. Please enter a valid registered Student ID or Examiner ID.';
+      errorAlert.textContent = 'Invalid credentials. Please verify your Student ID/Examiner ID and password.';
       errorAlert.hidden = false;
     }
   }
 
+  function handleStudentRegister(event) {
+    if (event) event.preventDefault();
+    const name = document.getElementById('reg-name').value.trim();
+    const roll = document.getElementById('reg-roll').value.trim();
+    const semester = document.getElementById('reg-semester').value;
+    const dept = document.getElementById('reg-dept').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value.trim();
+    const confirmPass = document.getElementById('reg-confirm-password').value.trim();
+    const msg = document.getElementById('register-msg');
+
+    if (password !== confirmPass) {
+      alert('Passwords do not match! Please check again.');
+      return;
+    }
+
+    const users = getUsers();
+    if (users.some(u => u.email.toLowerCase() === email.toLowerCase() || u.rollNo === roll)) {
+      alert('An account with this Roll Number or Email already exists!');
+      return;
+    }
+
+    const newStudentId = `STU${Date.now().toString().slice(-6)}`;
+    const newStudent = {
+      id: newStudentId,
+      name: name,
+      role: 'student',
+      password: password,
+      email: email,
+      rollNo: roll,
+      department: dept,
+      semester: semester,
+      academicYear: '2025-2026'
+    };
+
+    users.push(newStudent);
+    saveUsers(users);
+
+    msg.textContent = `Registration Successful! Your Student ID is ${newStudentId}. Please Sign In now.`;
+    msg.hidden = false;
+
+    // Switch to login tab and prefill
+    setTimeout(() => {
+      switchAuthTab('login');
+      document.getElementById('login-userid').value = newStudentId;
+      document.getElementById('login-password').value = password;
+    }, 1200);
+  }
+
   function fillDemoCredentials(userId, password) {
+    switchAuthTab('login');
     document.getElementById('login-userid').value = userId;
     document.getElementById('login-password').value = password;
     document.getElementById('login-error').hidden = true;
@@ -169,11 +339,11 @@
     sessionStorage.removeItem(STORAGE_KEY_USER);
     state.currentUser = null;
     state.currentExam = null;
-    navigateView('login-view');
+    navigateToPage('page-login-register');
   }
 
   /* -------------------------------------------------------------
-   * 4. Student Dashboard
+   * PAGE 2: Student Dashboard (Available and upcoming exams)
    * ----------------------------------------------------------- */
   function renderStudentDashboard() {
     if (!state.currentUser) return;
@@ -183,12 +353,15 @@
     document.getElementById('profile-student-dept').textContent = state.currentUser.department;
     document.getElementById('profile-student-sem').textContent = state.currentUser.semester;
 
-    const examListContainer = document.getElementById('available-exams-list');
-    examListContainer.innerHTML = '';
+    const availableContainer = document.getElementById('available-exams-list');
+    const upcomingContainer = document.getElementById('upcoming-exams-list');
+    availableContainer.innerHTML = '';
+    upcomingContainer.innerHTML = '';
 
+    const exams = getExaminations();
     const submissions = getSubmissions();
 
-    INITIAL_DATA.examinations.forEach(exam => {
+    exams.forEach(exam => {
       const userSubmission = submissions.find(
         s => s.examId === exam.id && s.studentId === state.currentUser.id
       );
@@ -196,77 +369,82 @@
       const sessionKey = `${STORAGE_KEY_SESSION_PREFIX}${exam.id}_${state.currentUser.id}`;
       const savedSession = localStorage.getItem(sessionKey);
 
-      let statusText = '<b>[Status: Available]</b>';
+      const card = document.createElement('div');
+      card.className = 'exam-card';
+
+      let statusBadge = '<span class="badge badge-info">Available</span>';
       let actionButtons = `
-        <button type="button" onclick="app.showExamInstructions('${exam.id}')">
-          <b>Read Instructions &amp; Start Exam</b>
+        <button class="btn btn-primary" type="button" onclick="app.showExamInstructions('${exam.id}')">
+          Read Instructions &amp; Start
         </button>
       `;
 
       if (userSubmission) {
         if (userSubmission.evaluation && userSubmission.evaluation.evaluated) {
-          statusText = '<b>[Status: Evaluated &amp; Result Published]</b>';
+          statusBadge = '<span class="badge badge-success">Evaluated - Result Published</span>';
           actionButtons = `
-            <button type="button" onclick="app.viewExamResult('${userSubmission.submissionId}')">
-              <b>View Published Result</b>
+            <button class="btn btn-outline" type="button" onclick="app.viewExamResult('${userSubmission.submissionId}')">
+              View Published Result
             </button>
           `;
         } else {
-          statusText = '<b>[Status: Submitted - Examiner Grading Pending]</b>';
+          statusBadge = '<span class="badge badge-warning">Submitted - Grading Pending</span>';
           actionButtons = `
-            <button type="button" onclick="app.viewExamResult('${userSubmission.submissionId}')">
+            <button class="btn btn-secondary" type="button" onclick="app.viewExamResult('${userSubmission.submissionId}')">
               View Submission Status
             </button>
           `;
         }
       } else if (savedSession) {
-        statusText = '<b>[Status: In Progress - Locally Saved]</b>';
+        statusBadge = '<span class="badge badge-review">In Progress (Saved)</span>';
         actionButtons = `
-          <button type="button" onclick="app.resumeExam('${exam.id}')">
-            <b>Resume Saved Examination</b>
+          <button class="btn btn-warning" type="button" onclick="app.resumeExam('${exam.id}')">
+            Resume Saved Exam
           </button>
         `;
       }
 
-      const examFieldset = document.createElement('fieldset');
-      examFieldset.style.marginBottom = '16px';
-      examFieldset.innerHTML = `
-        <legend><b>${exam.code}: ${escapeHtml(exam.title)}</b></legend>
-        <p>${statusText}</p>
-        <table border="1" cellpadding="6" cellspacing="0" width="100%">
-          <tr>
-            <td width="25%"><b>Department:</b></td>
-            <td width="25%">${escapeHtml(exam.department)}</td>
-            <td width="25%"><b>Examination Date:</b></td>
-            <td width="25%">${exam.date}</td>
-          </tr>
-          <tr>
-            <td><b>Duration:</b></td>
-            <td>${exam.durationMinutes} Minutes</td>
-            <td><b>Total Questions:</b></td>
-            <td>${exam.questions.length} (${exam.questions.filter(q => q.type === 'objective').length} Objective, ${exam.questions.filter(q => q.type === 'descriptive').length} Descriptive)</td>
-          </tr>
-          <tr>
-            <td><b>Total Marks:</b></td>
-            <td>${exam.totalMarks} Marks</td>
-            <td><b>Passing Marks:</b></td>
-            <td>${exam.passingMarks} Marks</td>
-          </tr>
-        </table>
-        <p align="right">
+      card.innerHTML = `
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <strong style="color:var(--primary); font-size:1.1rem;">${exam.code}</strong>
+            ${statusBadge}
+          </div>
+          <h3 class="exam-card-title">${escapeHtml(exam.title)}</h3>
+          <p class="text-muted" style="font-size:0.85rem; margin-bottom:10px;">${escapeHtml(exam.department)}</p>
+          <ul class="exam-meta-list">
+            <li><span class="exam-meta-label">Date:</span> <span class="exam-meta-val">${exam.date}</span></li>
+            <li><span class="exam-meta-label">Duration:</span> <span class="exam-meta-val">${exam.durationMinutes} Minutes</span></li>
+            <li><span class="exam-meta-label">Questions:</span> <span class="exam-meta-val">${exam.questions ? exam.questions.length : 0} Questions</span></li>
+            <li><span class="exam-meta-label">Total Marks:</span> <span class="exam-meta-val">${exam.totalMarks} Marks (Pass: ${exam.passingMarks})</span></li>
+          </ul>
+        </div>
+        <div style="margin-top:14px; text-align:right;">
           ${actionButtons}
-        </p>
+        </div>
       `;
 
-      examListContainer.appendChild(examFieldset);
+      if (exam.status === 'upcoming') {
+        upcomingContainer.appendChild(card);
+      } else {
+        availableContainer.appendChild(card);
+      }
     });
+
+    if (availableContainer.children.length === 0) {
+      availableContainer.innerHTML = '<p class="text-muted">No active examinations currently available.</p>';
+    }
+    if (upcomingContainer.children.length === 0) {
+      upcomingContainer.innerHTML = '<p class="text-muted">No upcoming examinations scheduled at this time.</p>';
+    }
   }
 
   /* -------------------------------------------------------------
-   * 5. Exam Instructions
+   * PAGE 3: Exam Instructions (Rules, duration and exam details)
    * ----------------------------------------------------------- */
   function showExamInstructions(examId) {
-    const exam = INITIAL_DATA.examinations.find(e => e.id === examId);
+    const exams = getExaminations();
+    const exam = exams.find(e => e.id === examId) || exams[0];
     if (!exam) return;
 
     state.currentExam = exam;
@@ -274,13 +452,18 @@
     document.getElementById('inst-exam-code').textContent = exam.code;
     document.getElementById('inst-exam-title').textContent = exam.title;
     document.getElementById('inst-exam-duration').textContent = `${exam.durationMinutes} Minutes`;
-    document.getElementById('inst-exam-questions').textContent = `${exam.questions.length} Questions`;
+    document.getElementById('inst-exam-questions').textContent = `${exam.questions ? exam.questions.length : 0} Questions`;
     document.getElementById('inst-exam-marks').textContent = `${exam.totalMarks} Marks`;
     document.getElementById('inst-exam-pass').textContent = `${exam.passingMarks} Marks`;
 
     const instructionsList = document.getElementById('inst-instructions-list');
     instructionsList.innerHTML = '';
-    exam.instructions.forEach(inst => {
+    (exam.instructions || [
+      "Ensure a stable internet connection. All answers are saved locally in case of disconnect.",
+      "Answers are automatically saved continuously as you type or select options.",
+      "You can review and modify your answers at any point prior to final submission.",
+      "When the timer reaches 00:00, the system automatically submits your saved answers."
+    ]).forEach(inst => {
       const li = document.createElement('li');
       li.textContent = inst;
       instructionsList.appendChild(li);
@@ -295,14 +478,21 @@
       startBtn.disabled = !this.checked;
     };
 
-    navigateView('exam-instructions-view');
+    navigateToPage('page-exam-instructions');
   }
 
   /* -------------------------------------------------------------
-   * 6. Starting / Resuming Examination
+   * PAGE 4: Examination Page (Display questions, timer and answer selection)
    * ----------------------------------------------------------- */
   function startExam(isResume = false) {
-    if (!state.currentExam || !state.currentUser) return;
+    if (!state.currentExam) {
+      const exams = getExaminations();
+      state.currentExam = exams[0];
+    }
+    if (!state.currentUser) {
+      const users = getUsers();
+      state.currentUser = users[0];
+    }
 
     const sessionKey = `${STORAGE_KEY_SESSION_PREFIX}${state.currentExam.id}_${state.currentUser.id}`;
     const savedSession = localStorage.getItem(sessionKey);
@@ -315,7 +505,7 @@
         state.visitedQuestions = parsed.visitedQuestions || {};
         state.timeRemainingSeconds = parsed.timeRemainingSeconds || (state.currentExam.durationMinutes * 60);
         state.currentQuestionIndex = parsed.currentQuestionIndex || 0;
-        showNotificationBanner('Previous examination session restored with all your saved answers.', 'online');
+        showNotificationBanner('Previous examination session restored with saved answers.', 'reconnected');
       } catch (e) {
         initFreshExamSession();
       }
@@ -324,7 +514,9 @@
     }
 
     state.viewMode = 'one-by-one';
-    state.visitedQuestions[state.currentExam.questions[state.currentQuestionIndex].id] = true;
+    if (state.currentExam.questions && state.currentExam.questions.length > 0) {
+      state.visitedQuestions[state.currentExam.questions[state.currentQuestionIndex].id] = true;
+    }
 
     document.getElementById('live-exam-title').textContent = `${state.currentExam.code}: ${state.currentExam.title}`;
     document.getElementById('offline-simulation-btn').textContent = 'Simulate Connection Drop';
@@ -333,13 +525,13 @@
     startAutoSaveBackgroundWorker();
 
     renderExamInterface();
-    navigateView('active-exam-view');
+    navigateToPage('page-examination');
   }
 
   function resumeExam(examId) {
-    const exam = INITIAL_DATA.examinations.find(e => e.id === examId);
-    if (!exam) return;
-    state.currentExam = exam;
+    const exams = getExaminations();
+    const exam = exams.find(e => e.id === examId);
+    if (exam) state.currentExam = exam;
     startExam(true);
   }
 
@@ -348,20 +540,15 @@
     state.reviewFlags = {};
     state.visitedQuestions = {};
     state.currentQuestionIndex = 0;
-    state.timeRemainingSeconds = state.currentExam.durationMinutes * 60;
+    state.timeRemainingSeconds = (state.currentExam.durationMinutes || 15) * 60;
   }
 
-  /* -------------------------------------------------------------
-   * 7. Timer & Auto-submission
-   * ----------------------------------------------------------- */
   function startTimer() {
     if (state.timerInterval) clearInterval(state.timerInterval);
-
     updateTimerDisplay();
 
     state.timerInterval = setInterval(() => {
       state.timeRemainingSeconds--;
-
       updateTimerDisplay();
 
       if (state.timeRemainingSeconds <= 0) {
@@ -372,35 +559,30 @@
   }
 
   function updateTimerDisplay() {
+    const timerBox = document.getElementById('exam-timer');
     const timerText = document.getElementById('timer-countdown-text');
-    const warningLabel = document.getElementById('timer-warning-label');
     if (!timerText) return;
 
     const secondsLeft = Math.max(0, state.timeRemainingSeconds);
     const minutes = Math.floor(secondsLeft / 60);
     const seconds = secondsLeft % 60;
-
     timerText.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
-    if (warningLabel) {
-      warningLabel.hidden = secondsLeft > 120;
+    if (timerBox) {
+      if (secondsLeft <= 120) timerBox.classList.add('timer-warning');
+      else timerBox.classList.remove('timer-warning');
     }
   }
 
   function handleTimeExpiredAutoSubmit() {
-    showNotificationBanner('⚠️ Examination Time Expired! The system is automatically submitting your saved answers...', 'offline');
-
+    showNotificationBanner('⚠️ Examination Time Expired! Automatically submitting your saved answers...', 'offline');
     setTimeout(() => {
       submitExam(true);
     }, 1200);
   }
 
-  /* -------------------------------------------------------------
-   * 8. Auto-Save & Offline Storage Engine
-   * ----------------------------------------------------------- */
   function saveCurrentStateToStorage() {
     if (!state.currentExam || !state.currentUser) return;
-
     const sessionKey = `${STORAGE_KEY_SESSION_PREFIX}${state.currentExam.id}_${state.currentUser.id}`;
     const sessionData = {
       examId: state.currentExam.id,
@@ -412,24 +594,23 @@
       timeRemainingSeconds: state.timeRemainingSeconds,
       lastSaved: new Date().toISOString()
     };
-
     localStorage.setItem(sessionKey, JSON.stringify(sessionData));
     state.lastSavedTimestamp = new Date();
-
     updateAutoSaveStatusUI();
   }
 
   function updateAutoSaveStatusUI() {
     const statusEl = document.getElementById('exam-autosave-status');
     if (!statusEl) return;
-
     const isOffline = !navigator.onLine || state.isOfflineSimulated;
 
     if (isOffline) {
-      statusEl.innerHTML = `<b><font color="red">[Saved locally (Offline)]</font></b>`;
+      statusEl.className = 'autosave-status offline';
+      statusEl.innerHTML = `<span>●</span> <strong>Saved locally (Offline)</strong>`;
     } else {
       const timeStr = state.lastSavedTimestamp ? state.lastSavedTimestamp.toLocaleTimeString() : 'Just now';
-      statusEl.innerHTML = `<b><font color="green">[Auto-saved at ${timeStr}]</font></b>`;
+      statusEl.className = 'autosave-status';
+      statusEl.innerHTML = `<span>●</span> Auto-saved at ${timeStr}`;
     }
   }
 
@@ -440,12 +621,10 @@
     }, 5000);
   }
 
-  /* -------------------------------------------------------------
-   * 9. Examination Interface Rendering
-   * ----------------------------------------------------------- */
   function renderExamInterface() {
+    if (!state.currentExam.questions || state.currentExam.questions.length === 0) return;
     const currentQ = state.currentExam.questions[state.currentQuestionIndex];
-    state.visitedQuestions[currentQ.id] = true;
+    if (currentQ) state.visitedQuestions[currentQ.id] = true;
 
     renderQuestionDisplay();
     renderQuestionPalette();
@@ -468,6 +647,8 @@
     allQuestionsContainer.hidden = true;
 
     const q = state.currentExam.questions[state.currentQuestionIndex];
+    if (!q) return;
+
     const qIndex = state.currentQuestionIndex + 1;
     const isObjective = q.type === 'objective';
     const currentAnswer = state.answers[q.id] || '';
@@ -476,59 +657,54 @@
 
     if (isObjective) {
       answerHtml = `
-        <fieldset>
-          <legend><b>Options:</b></legend>
-          ${q.options.map(opt => `
-            <p>
-              <label>
-                <input 
-                  type="radio" 
-                  name="opt_${q.id}" 
-                  value="${opt.key}" 
-                  ${currentAnswer === opt.key ? 'checked' : ''} 
-                  onchange="app.handleOptionSelect(${q.id}, '${opt.key}')"
-                >
-                <b>${opt.key}.</b> ${escapeHtml(opt.text)}
-              </label>
-            </p>
+        <div class="options-list">
+          ${(q.options || []).map(opt => `
+            <label class="option-item ${currentAnswer === opt.key ? 'selected' : ''}" onclick="app.handleOptionSelect(${q.id}, '${opt.key}')">
+              <input type="radio" name="opt_${q.id}" value="${opt.key}" ${currentAnswer === opt.key ? 'checked' : ''}>
+              <span class="option-key">${opt.key}.</span>
+              <span class="option-content">${escapeHtml(opt.text)}</span>
+            </label>
           `).join('')}
-          <p>
-            <button type="button" onclick="app.clearOptionSelection(${q.id})">Clear Choice</button>
-          </p>
-        </fieldset>
+        </div>
+        <button class="btn btn-secondary btn-sm" type="button" onclick="app.clearOptionSelection(${q.id})">
+          Clear Selection
+        </button>
       `;
     } else {
       const wordCount = currentAnswer ? currentAnswer.trim().split(/\s+/).filter(Boolean).length : 0;
       answerHtml = `
-        <fieldset>
-          <legend><b>Descriptive Answer:</b></legend>
-          <p>
-            <textarea 
-              id="desc_ans_${q.id}" 
-              rows="9" 
-              cols="70" 
-              placeholder="Type your descriptive response here. The system continuously saves your text..."
-              oninput="app.handleDescriptiveInput(${q.id}, this.value)"
-            >${escapeHtml(currentAnswer)}</textarea>
-          </p>
-          <p>
-            <b>Word Count:</b> <span id="word-count-${q.id}">${wordCount} words</span> &nbsp;|&nbsp;
-            <b>Max Recommended:</b> ${q.maxWords || 250} words
-          </p>
-          <p><i>Guideline: Answers are evaluated by the course examiner based on clarity, correctness, and completeness.</i></p>
-        </fieldset>
+        <div class="descriptive-input-container">
+          <label for="desc_ans_${q.id}" style="font-weight:600; display:block; margin-bottom:6px;">Your Written Answer:</label>
+          <textarea 
+            id="desc_ans_${q.id}" 
+            class="form-control" 
+            placeholder="Type your descriptive response here. System automatically saves your text continuously..."
+            oninput="app.handleDescriptiveInput(${q.id}, this.value)"
+          >${escapeHtml(currentAnswer)}</textarea>
+          <div style="display:flex; justify-content:space-between; font-size:0.8rem; color:var(--text-muted); margin-top:4px;">
+            <span id="word-count-${q.id}">${wordCount} words</span>
+            <span>Max recommended: ${q.maxWords || 250} words</span>
+          </div>
+        </div>
       `;
     }
 
     container.innerHTML = `
-      <fieldset>
-        <legend>
-          <h3>Question ${qIndex} of ${state.currentExam.questions.length} [${isObjective ? 'Objective - MCQ' : 'Descriptive'} &bull; ${q.marks} Marks]</h3>
-        </legend>
-        <p><b>Question:</b></p>
-        <p>${escapeHtml(q.question)}</p>
-        ${answerHtml}
-      </fieldset>
+      <div class="question-header">
+        <div>
+          <span style="font-size:1.15rem; font-weight:700; color:var(--primary);">Question ${qIndex} of ${state.currentExam.questions.length}</span>
+          <span class="badge ${isObjective ? 'badge-info' : 'badge-secondary'}" style="margin-left:8px;">
+            ${isObjective ? 'Objective (MCQ)' : 'Descriptive'}
+          </span>
+        </div>
+        <div>
+          <span class="badge badge-secondary" style="font-size:0.9rem;">${q.marks} Marks</span>
+        </div>
+      </div>
+      <div style="font-size:1.05rem; font-weight:500; margin-bottom:18px; line-height:1.5;">
+        ${escapeHtml(q.question)}
+      </div>
+      ${answerHtml}
     `;
   }
 
@@ -537,60 +713,58 @@
     container.innerHTML = '';
 
     state.currentExam.questions.forEach((q, idx) => {
+      const qCard = document.createElement('div');
+      qCard.className = 'card';
+      qCard.style.marginBottom = '20px';
+
       const isObjective = q.type === 'objective';
       const currentAnswer = state.answers[q.id] || '';
 
       let answerHtml = '';
       if (isObjective) {
         answerHtml = `
-          ${q.options.map(opt => `
-            <p>
-              <label>
-                <input 
-                  type="radio" 
-                  name="opt_all_${q.id}" 
-                  value="${opt.key}" 
-                  ${currentAnswer === opt.key ? 'checked' : ''} 
-                  onchange="app.handleOptionSelect(${q.id}, '${opt.key}')"
-                >
-                <b>${opt.key}.</b> ${escapeHtml(opt.text)}
+          <div class="options-list">
+            ${(q.options || []).map(opt => `
+              <label class="option-item ${currentAnswer === opt.key ? 'selected' : ''}" onclick="app.handleOptionSelect(${q.id}, '${opt.key}')">
+                <input type="radio" name="opt_all_${q.id}" value="${opt.key}" ${currentAnswer === opt.key ? 'checked' : ''}>
+                <span class="option-key">${opt.key}.</span>
+                <span class="option-content">${escapeHtml(opt.text)}</span>
               </label>
-            </p>
-          `).join('')}
-          <button type="button" onclick="app.clearOptionSelection(${q.id})">Clear Choice</button>
+            `).join('')}
+          </div>
+          <button class="btn btn-secondary btn-sm" type="button" onclick="app.clearOptionSelection(${q.id})">Clear Selection</button>
         `;
       } else {
         const wordCount = currentAnswer ? currentAnswer.trim().split(/\s+/).filter(Boolean).length : 0;
         answerHtml = `
           <textarea 
             id="desc_all_ans_${q.id}" 
-            rows="6" 
-            cols="70" 
+            class="form-control" 
             placeholder="Type your response..."
             oninput="app.handleDescriptiveInput(${q.id}, this.value)"
           >${escapeHtml(currentAnswer)}</textarea>
-          <p>
-            <b>Word Count:</b> <span id="word-count-all-${q.id}">${wordCount} words</span>
-          </p>
+          <div style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">
+            <span id="word-count-all-${q.id}">${wordCount} words</span>
+          </div>
         `;
       }
 
-      const qFieldset = document.createElement('fieldset');
-      qFieldset.style.marginBottom = '16px';
-      qFieldset.innerHTML = `
-        <legend><b>Question ${idx + 1} (${isObjective ? 'MCQ' : 'Descriptive'}) &bull; ${q.marks} Marks</b></legend>
-        <p>${escapeHtml(q.question)}</p>
+      qCard.innerHTML = `
+        <div class="question-header">
+          <span style="font-weight:700;">Question ${idx + 1} (${isObjective ? 'MCQ' : 'Descriptive'})</span>
+          <span class="badge badge-secondary">${q.marks} Marks</span>
+        </div>
+        <p style="font-weight:500;">${escapeHtml(q.question)}</p>
         ${answerHtml}
       `;
 
-      container.appendChild(qFieldset);
+      container.appendChild(qCard);
     });
   }
 
   function renderQuestionPalette() {
     const grid = document.getElementById('question-palette-grid');
-    if (!grid || !state.currentExam) return;
-
+    if (!grid || !state.currentExam || !state.currentExam.questions) return;
     grid.innerHTML = '';
 
     let answeredCount = 0;
@@ -598,47 +772,41 @@
     let reviewCount = 0;
     let notVisitedCount = 0;
 
-    const list = document.createElement('ol');
-
     state.currentExam.questions.forEach((q, index) => {
       const isCurrent = index === state.currentQuestionIndex && state.viewMode === 'one-by-one';
       const hasAnswer = state.answers[q.id] && String(state.answers[q.id]).trim().length > 0;
       const isReview = !!state.reviewFlags[q.id];
       const isVisited = !!state.visitedQuestions[q.id];
 
-      let labelText = '';
+      let statusClass = 'status-not-visited';
 
       if (isReview && hasAnswer) {
-        labelText = '[✓ ? Answered &amp; Review]';
+        statusClass = 'status-answered-review';
         reviewCount++;
         answeredCount++;
       } else if (isReview) {
-        labelText = '[? Review]';
+        statusClass = 'status-review';
         reviewCount++;
       } else if (hasAnswer) {
-        labelText = '[✓ Answered]';
+        statusClass = 'status-answered';
         answeredCount++;
       } else if (isVisited) {
-        labelText = '[• Not Answered]';
+        statusClass = 'status-not-answered';
         notAnsweredCount++;
       } else {
-        labelText = '[  Not Visited]';
+        statusClass = 'status-not-visited';
         notVisitedCount++;
       }
 
-      const li = document.createElement('li');
-      li.style.marginBottom = '6px';
-
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.innerHTML = `${isCurrent ? '<b>&rarr; Q' + (index + 1) + '</b>' : 'Q' + (index + 1)} ${labelText}`;
+      btn.className = `palette-btn ${statusClass} ${isCurrent ? 'current' : ''}`;
+      btn.textContent = index + 1;
+      btn.title = `Jump to Question ${index + 1}`;
       btn.onclick = () => jumpToQuestion(index);
 
-      li.appendChild(btn);
-      list.appendChild(li);
+      grid.appendChild(btn);
     });
-
-    grid.appendChild(list);
 
     document.getElementById('palette-count-answered').textContent = answeredCount;
     document.getElementById('palette-count-not-answered').textContent = notAnsweredCount;
@@ -654,14 +822,13 @@
     if (state.viewMode === 'all') {
       if (prevBtn) prevBtn.disabled = true;
       if (nextBtn) nextBtn.disabled = true;
-      if (reviewBtn) reviewBtn.disabled = true;
       return;
     }
 
     if (prevBtn) prevBtn.disabled = state.currentQuestionIndex === 0;
     if (nextBtn) {
       if (state.currentQuestionIndex === state.currentExam.questions.length - 1) {
-        nextBtn.textContent = 'End of Questions';
+        nextBtn.textContent = 'Last Question';
         nextBtn.disabled = true;
       } else {
         nextBtn.textContent = 'Next Question →';
@@ -671,18 +838,16 @@
 
     if (reviewBtn) {
       const q = state.currentExam.questions[state.currentQuestionIndex];
-      const isMarked = !!state.reviewFlags[q.id];
+      const isMarked = q && !!state.reviewFlags[q.id];
       reviewBtn.textContent = isMarked ? '★ Unmark Review' : '☆ Mark for Review';
+      reviewBtn.className = isMarked ? 'btn btn-warning' : 'btn btn-secondary';
     }
   }
 
-  /* -------------------------------------------------------------
-   * 10. Student Answer Inputs & Navigation Actions
-   * ----------------------------------------------------------- */
   function handleOptionSelect(questionId, optionKey) {
     state.answers[questionId] = optionKey;
     saveCurrentStateToStorage();
-    renderQuestionPalette();
+    renderExamInterface();
   }
 
   function clearOptionSelection(questionId) {
@@ -693,22 +858,22 @@
 
   function handleDescriptiveInput(questionId, text) {
     state.answers[questionId] = text;
-
     const countEl = document.getElementById(`word-count-${questionId}`);
     if (countEl) {
       const words = text ? text.trim().split(/\s+/).filter(Boolean).length : 0;
       countEl.textContent = `${words} words`;
     }
-
     saveCurrentStateToStorage();
     renderQuestionPalette();
   }
 
   function toggleReviewFlag() {
     const q = state.currentExam.questions[state.currentQuestionIndex];
-    state.reviewFlags[q.id] = !state.reviewFlags[q.id];
-    saveCurrentStateToStorage();
-    renderExamInterface();
+    if (q) {
+      state.reviewFlags[q.id] = !state.reviewFlags[q.id];
+      saveCurrentStateToStorage();
+      renderExamInterface();
+    }
   }
 
   function jumpToQuestion(index) {
@@ -742,12 +907,16 @@
   }
 
   /* -------------------------------------------------------------
-   * 11. Review Section & Validation Before Final Submission
+   * PAGE 5: Review & Submit (Review and modify answers before submission)
    * ----------------------------------------------------------- */
-  function openReviewModal() {
+  function openReviewSubmitPage() {
+    if (!state.currentExam) {
+      const exams = getExaminations();
+      state.currentExam = exams[0];
+    }
     saveCurrentStateToStorage();
 
-    const totalQuestions = state.currentExam.questions.length;
+    const totalQuestions = state.currentExam.questions ? state.currentExam.questions.length : 0;
     let answeredCount = 0;
     let unansweredCount = 0;
     let reviewCount = 0;
@@ -755,7 +924,7 @@
     const listContainer = document.getElementById('review-modal-question-list');
     listContainer.innerHTML = '';
 
-    state.currentExam.questions.forEach((q, idx) => {
+    (state.currentExam.questions || []).forEach((q, idx) => {
       const isAnswered = state.answers[q.id] && String(state.answers[q.id]).trim().length > 0;
       const isReview = !!state.reviewFlags[q.id];
 
@@ -763,16 +932,17 @@
       else unansweredCount++;
       if (isReview) reviewCount++;
 
-      let statusBadge = isAnswered ? '<b>[Answered]</b>' : '<b><font color="red">[Unanswered]</font></b>';
-      if (isReview) statusBadge += ' <b>[Marked for Review]</b>';
-
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td align="center"><b>Question ${idx + 1}</b></td>
+        <td><strong>Question ${idx + 1}</strong></td>
         <td>${q.type === 'objective' ? 'Objective (MCQ)' : 'Descriptive'}</td>
-        <td>${statusBadge}</td>
-        <td align="center">
-          <button type="button" onclick="app.closeReviewModalAndJump(${idx})">
+        <td>${q.marks} Marks</td>
+        <td>
+          ${isAnswered ? '<span class="badge badge-success">Answered</span>' : '<span class="badge badge-warning">Unanswered</span>'}
+          ${isReview ? '<span class="badge badge-review" style="margin-left:4px;">Marked for Review</span>' : ''}
+        </td>
+        <td>
+          <button class="btn btn-secondary btn-sm" type="button" onclick="app.closeReviewAndJumpTo(${idx})">
             Modify Answer
           </button>
         </td>
@@ -793,37 +963,26 @@
       warningBox.hidden = true;
     }
 
-    document.getElementById('active-exam-view').hidden = true;
-    document.getElementById('review-submit-modal').hidden = false;
-    window.scrollTo(0, 0);
+    navigateToPage('page-review-submit');
   }
 
-  function closeReviewModal() {
-    document.getElementById('review-submit-modal').hidden = true;
-    document.getElementById('active-exam-view').hidden = false;
-  }
-
-  function closeReviewModalAndJump(index) {
-    closeReviewModal();
+  function closeReviewAndJumpTo(index) {
     jumpToQuestion(index);
+    navigateToPage('page-examination');
   }
 
-  /* -------------------------------------------------------------
-   * 12. Submission & Objective Auto-Evaluation Engine
-   * ----------------------------------------------------------- */
   function submitExam(isAutoExpired = false) {
     if (!state.currentExam || !state.currentUser) return;
-
     if (state.timerInterval) clearInterval(state.timerInterval);
     if (state.autoSaveInterval) clearInterval(state.autoSaveInterval);
-    document.getElementById('review-submit-modal').hidden = true;
 
     const submissionTime = new Date().toISOString();
     const submissionId = `SUB-${Date.now().toString(36).toUpperCase()}-${Math.floor(Math.random() * 899 + 100)}`;
 
     let objectiveMarks = 0;
-    const objectiveQuestions = state.currentExam.questions.filter(q => q.type === 'objective');
-    const descriptiveQuestions = state.currentExam.questions.filter(q => q.type === 'descriptive');
+    const questions = state.currentExam.questions || [];
+    const objectiveQuestions = questions.filter(q => q.type === 'objective');
+    const descriptiveQuestions = questions.filter(q => q.type === 'descriptive');
 
     objectiveQuestions.forEach(q => {
       const studentAnswer = state.answers[q.id];
@@ -843,11 +1002,11 @@
       department: state.currentUser.department,
       submittedAt: submissionTime,
       submissionType: isAutoExpired ? 'auto-expired' : 'manual',
-      timeTakenMinutes: Math.round((state.currentExam.durationMinutes * 60 - state.timeRemainingSeconds) / 60),
+      timeTakenMinutes: Math.round(((state.currentExam.durationMinutes || 15) * 60 - state.timeRemainingSeconds) / 60),
       answers: { ...state.answers },
       evaluation: {
         evaluated: !hasDescriptive,
-        evaluatedBy: hasDescriptive ? null : 'System Automated Engine',
+        evaluatedBy: hasDescriptive ? null : 'Automated Evaluation Engine',
         evaluatedAt: hasDescriptive ? null : submissionTime,
         objectiveMarksObtained: objectiveMarks,
         descriptiveMarksObtained: 0,
@@ -857,7 +1016,7 @@
         passed: objectiveMarks >= state.currentExam.passingMarks,
         feedback: {},
         generalRemarks: hasDescriptive
-          ? 'Objective questions have been evaluated automatically. Descriptive answers have been submitted to the university examiner for grading.'
+          ? 'Objective questions evaluated automatically. Descriptive answers submitted to course examiner.'
           : 'Automated evaluation completed.'
       }
     };
@@ -873,7 +1032,7 @@
   }
 
   /* -------------------------------------------------------------
-   * 13. Result View (Student & Evaluator)
+   * PAGE 6: Results Page (Display marks and examination results)
    * ----------------------------------------------------------- */
   function viewExamResult(submissionId) {
     const submissions = getSubmissions();
@@ -883,12 +1042,13 @@
       return;
     }
 
-    const exam = INITIAL_DATA.examinations.find(e => e.id === submission.examId);
+    const exams = getExaminations();
+    const exam = exams.find(e => e.id === submission.examId);
     if (!exam) return;
 
     document.getElementById('res-exam-title').textContent = `${exam.code}: ${exam.title}`;
     document.getElementById('res-submission-id').textContent = submission.submissionId;
-    document.getElementById('res-student-info').textContent = `${submission.studentName} (${submission.studentRoll}) - ${submission.department}`;
+    document.getElementById('res-student-info').textContent = `${submission.studentName} (${submission.studentRoll}) &bull; ${submission.department}`;
     document.getElementById('res-submission-time').textContent = new Date(submission.submittedAt).toLocaleString();
     document.getElementById('res-submission-mode').textContent = submission.submissionType === 'auto-expired' ? 'Auto-submitted on time expiry' : 'Manual submission by student';
 
@@ -902,32 +1062,33 @@
 
     if (isEvaluated) {
       const isPassed = evalObj.passed;
-      statusBadge.innerHTML = isPassed ? '<font color="green">PASSED</font>' : '<font color="red">FAILED</font>';
+      statusBadge.textContent = isPassed ? 'PASSED' : 'NEEDS IMPROVEMENT';
+      statusBadge.className = `result-badge-large ${isPassed ? 'badge-success' : 'badge-danger'}`;
       scoreVal.textContent = `${evalObj.totalMarksObtained} / ${evalObj.totalPossibleMarks}`;
       scorePercent.textContent = `Percentage: ${evalObj.percentage}%`;
       marksBreakdown.innerHTML = `
-        <b>Marks Breakdown:</b> Objective Marks: ${evalObj.objectiveMarksObtained} &bull; 
-        Descriptive Marks: ${evalObj.descriptiveMarksObtained} &bull; 
-        Total Marks: ${evalObj.totalMarksObtained} / ${evalObj.totalPossibleMarks}
-        ${evalObj.evaluatedBy ? `<br><i>Evaluated by: ${evalObj.evaluatedBy} on ${new Date(evalObj.evaluatedAt).toLocaleDateString()}</i>` : ''}
-        ${evalObj.generalRemarks ? `<br><b>General Remarks:</b> "${escapeHtml(evalObj.generalRemarks)}"` : ''}
+        <strong>Breakdown:</strong> Objective: ${evalObj.objectiveMarksObtained} Marks &bull; 
+        Descriptive: ${evalObj.descriptiveMarksObtained} Marks
+        ${evalObj.evaluatedBy ? `<br><small class="text-muted">Evaluated by: ${evalObj.evaluatedBy} on ${new Date(evalObj.evaluatedAt).toLocaleDateString()}</small>` : ''}
       `;
     } else {
-      statusBadge.innerHTML = '<font color="orange">EVALUATION IN PROGRESS</font>';
+      statusBadge.textContent = 'EVALUATION IN PROGRESS';
+      statusBadge.className = 'result-badge-large badge-warning';
       scoreVal.textContent = `${evalObj.objectiveMarksObtained} (Objective Only)`;
-      scorePercent.textContent = 'Descriptive questions pending examiner evaluation';
+      scorePercent.textContent = 'Descriptive evaluation pending by University Examiner';
       marksBreakdown.innerHTML = `
-        <b>Objective Score:</b> ${evalObj.objectiveMarksObtained} Marks (Automated Evaluation)<br>
-        <b>Descriptive Questions:</b> Submitted to university examiner for review and grading.
+        <strong>Objective Score:</strong> ${evalObj.objectiveMarksObtained} Marks (Automated Evaluation)<br>
+        <strong>Descriptive Questions:</strong> Awaiting marks and feedback from examiner.
       `;
     }
 
     const detailsContainer = document.getElementById('res-questions-breakdown');
     detailsContainer.innerHTML = '';
 
-    exam.questions.forEach((q, idx) => {
-      const qFieldset = document.createElement('fieldset');
-      qFieldset.style.marginBottom = '16px';
+    (exam.questions || []).forEach((q, idx) => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.style.marginBottom = '16px';
 
       const studentAns = submission.answers[q.id];
       const isObjective = q.type === 'objective';
@@ -937,123 +1098,490 @@
       if (isObjective) {
         const isCorrect = studentAns && studentAns.toUpperCase() === q.correctOption.toUpperCase();
         evaluationHtml = `
-          <table border="1" cellpadding="6" cellspacing="0" width="100%">
-            <tr>
-              <td width="25%"><b>Your Selected Answer:</b></td>
-              <td width="25%">${studentAns ? `Option ${studentAns}` : '<i>Not Answered</i>'}</td>
-              <td width="25%"><b>Correct Answer:</b></td>
-              <td width="25%">Option ${q.correctOption}</td>
-            </tr>
-            <tr>
-              <td><b>Evaluation Result:</b></td>
-              <td>${isCorrect ? '<b><font color="green">CORRECT</font></b>' : '<b><font color="red">INCORRECT</font></b>'}</td>
-              <td><b>Marks Awarded:</b></td>
-              <td><b>${isCorrect ? q.marks : 0} / ${q.marks} Marks</b></td>
-            </tr>
-          </table>
-          <p><b>Explanation:</b> ${escapeHtml(q.explanation || 'N/A')}</p>
+          <div class="review-answer-box ${isCorrect ? 'correct' : 'incorrect'}">
+            <strong>Your Answer:</strong> ${studentAns ? `Option ${studentAns}` : '<em>Not Answered</em>'} &nbsp;|&nbsp;
+            <strong>Correct Answer:</strong> Option ${q.correctOption} &nbsp;|&nbsp;
+            <strong>Marks:</strong> ${isCorrect ? q.marks : 0} / ${q.marks} Marks
+          </div>
+          <div style="font-size:0.85rem; color:var(--text-muted); margin-top:6px;">
+            <strong>Explanation:</strong> ${escapeHtml(q.explanation || 'N/A')}
+          </div>
         `;
       } else {
         const feedback = (evalObj.feedback && evalObj.feedback[q.id]) || null;
-        const awardedMarks = feedback ? feedback.marks : (isEvaluated ? 0 : 'Pending Evaluation');
+        const awardedMarks = feedback ? feedback.marks : (isEvaluated ? 0 : 'Pending');
 
         evaluationHtml = `
-          <p><b>Candidate's Submitted Answer:</b></p>
-          <pre>${escapeHtml(studentAns || '[Candidate left this answer blank]')}</pre>
-          <table border="1" cellpadding="6" cellspacing="0" width="100%">
-            <tr>
-              <td width="30%"><b>Marks Awarded:</b></td>
-              <td width="70%"><b>${awardedMarks} / ${q.marks} Marks</b></td>
-            </tr>
-            <tr>
-              <td><b>Examiner Comments:</b></td>
-              <td><i>${feedback && feedback.comments ? escapeHtml(feedback.comments) : (isEvaluated ? 'No specific comments provided.' : 'Pending examiner review.')}</i></td>
-            </tr>
-          </table>
-          <details style="margin-top:8px;">
-            <summary><b>View Model Answer Key &amp; Rubric</b></summary>
-            <pre>${escapeHtml(q.modelAnswerKey || q.rubric)}</pre>
-          </details>
+          <div class="review-answer-box">
+            <strong>Your Submitted Response:</strong>
+            <pre style="white-space:pre-wrap; margin-top:6px; font-family:monospace; font-size:0.9rem;">${escapeHtml(studentAns || '[No answer written]')}</pre>
+          </div>
+          <div class="examiner-feedback-box">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong>Examiner Evaluation:</strong>
+              <span class="badge ${isEvaluated ? 'badge-info' : 'badge-warning'}">Marks: ${awardedMarks} / ${q.marks}</span>
+            </div>
+            <p style="margin-top:6px; font-style:italic;">
+              ${feedback && feedback.comments ? `"${escapeHtml(feedback.comments)}"` : (isEvaluated ? 'No specific comments provided.' : 'Pending examiner review and grading.')}
+            </p>
+            <details style="margin-top:8px;">
+              <summary style="font-size:0.8rem; cursor:pointer; color:var(--primary);">View Model Rubric / Expected Answer</summary>
+              <pre style="font-size:0.82rem; margin-top:4px; white-space:pre-wrap;">${escapeHtml(q.modelAnswerKey || q.rubric)}</pre>
+            </details>
+          </div>
         `;
       }
 
-      qFieldset.innerHTML = `
-        <legend><b>Question ${idx + 1} (${isObjective ? 'Objective - MCQ' : 'Descriptive'}) &bull; Max Marks: ${q.marks}</b></legend>
-        <p><b>Question:</b> ${escapeHtml(q.question)}</p>
+      card.innerHTML = `
+        <div class="question-header">
+          <span style="font-weight:700;">Question ${idx + 1} (${isObjective ? 'Objective' : 'Descriptive'})</span>
+          <span class="badge badge-secondary">Max Marks: ${q.marks}</span>
+        </div>
+        <p style="font-weight:500;">${escapeHtml(q.question)}</p>
         ${evaluationHtml}
       `;
 
-      detailsContainer.appendChild(qFieldset);
+      detailsContainer.appendChild(card);
     });
 
-    navigateView('result-view');
+    navigateToPage('page-results');
+  }
+
+  function viewSampleResult() {
+    const submissions = getSubmissions();
+    if (submissions.length > 0) {
+      viewExamResult(submissions[0].submissionId);
+    } else {
+      alert('No submissions found yet. Take an exam first or use the sample records.');
+    }
   }
 
   /* -------------------------------------------------------------
-   * 14. Examiner Evaluation Portal
+   * PAGE 7: Admin Dashboard (Statistics and examination overview)
    * ----------------------------------------------------------- */
-  function renderExaminerDashboard() {
-    if (!state.currentUser || state.currentUser.role !== 'examiner') {
-      alert('Access restricted to Examiners.');
-      navigateView('login-view');
+  function renderAdminDashboard() {
+    const users = getUsers();
+    const exams = getExaminations();
+    const submissions = getSubmissions();
+
+    const students = users.filter(u => u.role === 'student');
+    const totalQuestions = exams.reduce((acc, e) => acc + (e.questions ? e.questions.length : 0), 0);
+    const evaluatedSubmissions = submissions.filter(s => s.evaluation && s.evaluation.evaluated);
+    const passedCount = evaluatedSubmissions.filter(s => s.evaluation.passed).length;
+    const passRate = evaluatedSubmissions.length > 0 ? Math.round((passedCount / evaluatedSubmissions.length) * 100) : 100;
+
+    document.getElementById('admin-stat-students').textContent = students.length;
+    document.getElementById('admin-stat-exams').textContent = exams.length;
+    document.getElementById('admin-stat-questions').textContent = totalQuestions;
+    document.getElementById('admin-stat-submissions').textContent = submissions.length;
+    document.getElementById('admin-stat-passrate').textContent = `${passRate}%`;
+
+    // Overview Table
+    const examsTable = document.getElementById('admin-exams-overview-table');
+    examsTable.innerHTML = '';
+    exams.forEach(e => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>${e.code}</strong></td>
+        <td>${escapeHtml(e.title)}</td>
+        <td>${escapeHtml(e.department)}</td>
+        <td>${e.date}</td>
+        <td>${e.durationMinutes} mins</td>
+        <td>${e.questions ? e.questions.length : 0}</td>
+        <td>${e.totalMarks}</td>
+        <td><span class="badge ${e.status === 'upcoming' ? 'badge-warning' : 'badge-success'}">${e.status || 'available'}</span></td>
+        <td>
+          <button class="btn btn-secondary btn-sm" type="button" onclick="app.editExamination('${e.id}')">Edit</button>
+          <button class="btn btn-outline btn-sm" type="button" onclick="app.openQuestionsForExam('${e.id}')">Questions</button>
+        </td>
+      `;
+      examsTable.appendChild(tr);
+    });
+
+    // Recent Submissions Table
+    const subTable = document.getElementById('admin-recent-submissions-table');
+    subTable.innerHTML = '';
+    if (submissions.length === 0) {
+      subTable.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No submissions recorded yet.</td></tr>';
+    } else {
+      submissions.slice(-5).reverse().forEach(sub => {
+        const isEval = sub.evaluation && sub.evaluation.evaluated;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${sub.submissionId}</strong></td>
+          <td>${sub.examId}</td>
+          <td>${escapeHtml(sub.studentName)} (${sub.studentRoll})</td>
+          <td>${new Date(sub.submittedAt).toLocaleDateString()}</td>
+          <td>${isEval ? `${sub.evaluation.totalMarksObtained} / ${sub.evaluation.totalPossibleMarks}` : `${sub.evaluation.objectiveMarksObtained} (Obj)`}</td>
+          <td><span class="badge ${isEval ? 'badge-success' : 'badge-warning'}">${isEval ? 'Published' : 'Pending'}</span></td>
+          <td>
+            <button class="btn btn-secondary btn-sm" type="button" onclick="app.viewExamResult('${sub.submissionId}')">View</button>
+          </td>
+        `;
+        subTable.appendChild(tr);
+      });
+    }
+  }
+
+  /* -------------------------------------------------------------
+   * PAGE 8: Manage Examinations (Create, edit and delete examinations)
+   * ----------------------------------------------------------- */
+  function renderManageExams() {
+    const exams = getExaminations();
+    const tbody = document.getElementById('manage-exams-table-body');
+    tbody.innerHTML = '';
+
+    exams.forEach(e => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>${e.code}</strong></td>
+        <td>${escapeHtml(e.title)}</td>
+        <td>${e.date}</td>
+        <td>${e.durationMinutes} mins</td>
+        <td>${e.questions ? e.questions.length : 0}</td>
+        <td>${e.totalMarks} (Pass: ${e.passingMarks})</td>
+        <td><span class="badge ${e.status === 'upcoming' ? 'badge-warning' : 'badge-success'}">${e.status || 'available'}</span></td>
+        <td>
+          <button class="btn btn-secondary btn-sm" type="button" onclick="app.editExamination('${e.id}')">Edit</button>
+          <button class="btn btn-outline btn-sm" type="button" onclick="app.openQuestionsForExam('${e.id}')">Questions</button>
+          <button class="btn btn-danger btn-sm" type="button" onclick="app.deleteExamination('${e.id}')">Delete</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function handleSaveExamination(event) {
+    if (event) event.preventDefault();
+    const editId = document.getElementById('edit-exam-id').value;
+    const code = document.getElementById('exam-input-code').value.trim();
+    const title = document.getElementById('exam-input-title').value.trim();
+    const dept = document.getElementById('exam-input-dept').value.trim();
+    const date = document.getElementById('exam-input-date').value;
+    const duration = parseInt(document.getElementById('exam-input-duration').value, 10);
+    const totalMarks = parseInt(document.getElementById('exam-input-totalmarks').value, 10);
+    const passMarks = parseInt(document.getElementById('exam-input-passmarks').value, 10);
+    const status = document.getElementById('exam-input-status').value;
+    const instructionsText = document.getElementById('exam-input-instructions').value.trim();
+    const instructions = instructionsText ? instructionsText.split('\n').filter(Boolean) : [
+      "Ensure stable internet connection.",
+      "Answers are automatically saved.",
+      "System auto-submits upon timer expiry."
+    ];
+
+    const exams = getExaminations();
+
+    if (editId) {
+      // Update
+      const idx = exams.findIndex(e => e.id === editId);
+      if (idx !== -1) {
+        exams[idx].code = code;
+        exams[idx].title = title;
+        exams[idx].department = dept;
+        exams[idx].date = date;
+        exams[idx].durationMinutes = duration;
+        exams[idx].totalMarks = totalMarks;
+        exams[idx].passingMarks = passMarks;
+        exams[idx].status = status;
+        exams[idx].instructions = instructions;
+      }
+    } else {
+      // Create New
+      const newId = `EXAM-${code.toUpperCase()}-${Date.now().toString().slice(-4)}`;
+      exams.push({
+        id: newId,
+        code: code,
+        title: title,
+        department: dept,
+        date: date,
+        durationMinutes: duration,
+        totalMarks: totalMarks,
+        passingMarks: passMarks,
+        status: status,
+        instructions: instructions,
+        questions: []
+      });
+    }
+
+    saveExaminations(exams);
+    resetExamForm();
+    renderManageExams();
+    alert('Examination configuration saved successfully!');
+  }
+
+  function editExamination(examId) {
+    const exams = getExaminations();
+    const exam = exams.find(e => e.id === examId);
+    if (!exam) return;
+
+    navigateToPage('page-manage-exams');
+
+    document.getElementById('edit-exam-id').value = exam.id;
+    document.getElementById('exam-input-code').value = exam.code;
+    document.getElementById('exam-input-title').value = exam.title;
+    document.getElementById('exam-input-dept').value = exam.department;
+    document.getElementById('exam-input-date').value = exam.date;
+    document.getElementById('exam-input-duration').value = exam.durationMinutes;
+    document.getElementById('exam-input-totalmarks').value = exam.totalMarks;
+    document.getElementById('exam-input-passmarks').value = exam.passingMarks;
+    document.getElementById('exam-input-status').value = exam.status || 'available';
+    document.getElementById('exam-input-instructions').value = (exam.instructions || []).join('\n');
+
+    document.getElementById('manage-exam-form-title').textContent = `Edit Examination: ${exam.code}`;
+    document.getElementById('cancel-edit-exam-btn').hidden = false;
+    document.getElementById('exam-submit-btn').textContent = 'Update Examination';
+  }
+
+  function resetExamForm() {
+    document.getElementById('edit-exam-id').value = '';
+    document.getElementById('exam-input-code').value = '';
+    document.getElementById('exam-input-title').value = '';
+    document.getElementById('exam-input-dept').value = '';
+    document.getElementById('exam-input-date').value = '';
+    document.getElementById('exam-input-duration').value = '15';
+    document.getElementById('exam-input-totalmarks').value = '20';
+    document.getElementById('exam-input-passmarks').value = '10';
+    document.getElementById('exam-input-status').value = 'available';
+    document.getElementById('exam-input-instructions').value = '';
+
+    document.getElementById('manage-exam-form-title').textContent = 'Create New Examination';
+    document.getElementById('cancel-edit-exam-btn').hidden = true;
+    document.getElementById('exam-submit-btn').textContent = 'Save Examination';
+  }
+
+  function deleteExamination(examId) {
+    if (!confirm('Are you sure you want to delete this examination? All its questions will also be removed.')) return;
+    let exams = getExaminations();
+    exams = exams.filter(e => e.id !== examId);
+    saveExaminations(exams);
+    renderManageExams();
+  }
+
+  /* -------------------------------------------------------------
+   * PAGE 9: Manage Questions (Add MCQs and descriptive questions)
+   * ----------------------------------------------------------- */
+  function renderManageQuestions() {
+    const exams = getExaminations();
+    const select = document.getElementById('question-exam-select');
+    select.innerHTML = '';
+
+    exams.forEach(e => {
+      const opt = document.createElement('option');
+      opt.value = e.id;
+      opt.textContent = `${e.code}: ${e.title}`;
+      select.appendChild(opt);
+    });
+
+    if (!state.selectedQuestionExamId && exams.length > 0) {
+      state.selectedQuestionExamId = exams[0].id;
+    }
+
+    if (state.selectedQuestionExamId) {
+      select.value = state.selectedQuestionExamId;
+      handleQuestionExamChange(state.selectedQuestionExamId);
+    }
+  }
+
+  function handleQuestionExamChange(examId) {
+    state.selectedQuestionExamId = examId;
+    const exams = getExaminations();
+    const exam = exams.find(e => e.id === examId);
+    const metaSpan = document.getElementById('question-exam-meta');
+    const container = document.getElementById('manage-questions-list');
+
+    if (!exam) return;
+    metaSpan.textContent = `Duration: ${exam.durationMinutes} mins | Total Marks: ${exam.totalMarks} | Current Questions: ${exam.questions ? exam.questions.length : 0}`;
+
+    container.innerHTML = '';
+    const questions = exam.questions || [];
+
+    if (questions.length === 0) {
+      container.innerHTML = '<p class="text-muted">No questions added to this examination yet. Use the form above to add MCQs or Descriptive questions.</p>';
       return;
     }
+
+    questions.forEach((q, idx) => {
+      const qDiv = document.createElement('div');
+      qDiv.className = 'card';
+      qDiv.style.marginBottom = '12px';
+
+      const isObj = q.type === 'objective';
+      let detailsHtml = '';
+
+      if (isObj) {
+        detailsHtml = `
+          <ul style="margin:8px 0 8px 20px; font-size:0.9rem;">
+            ${(q.options || []).map(o => `<li><strong>${o.key}:</strong> ${escapeHtml(o.text)} ${o.key === q.correctOption ? '<b><font color="green">(Correct Key)</font></b>' : ''}</li>`).join('')}
+          </ul>
+          ${q.explanation ? `<p style="font-size:0.82rem; color:var(--text-muted); margin:0;"><strong>Explanation:</strong> ${escapeHtml(q.explanation)}</p>` : ''}
+        `;
+      } else {
+        detailsHtml = `
+          <p style="font-size:0.85rem; margin:6px 0;"><strong>Model Rubric:</strong> ${escapeHtml(q.modelAnswerKey || q.rubric || 'N/A')}</p>
+        `;
+      }
+
+      qDiv.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <div>
+            <strong>Question ${idx + 1}</strong>
+            <span class="badge ${isObj ? 'badge-info' : 'badge-secondary'}" style="margin-left:6px;">${isObj ? 'Objective MCQ' : 'Descriptive'}</span>
+            <span class="badge badge-secondary" style="margin-left:6px;">${q.marks} Marks</span>
+          </div>
+          <button class="btn btn-danger btn-sm" type="button" onclick="app.deleteQuestion('${exam.id}', ${q.id})">
+            Delete Question
+          </button>
+        </div>
+        <p style="margin:4px 0; font-weight:500;">${escapeHtml(q.question)}</p>
+        ${detailsHtml}
+      `;
+
+      container.appendChild(qDiv);
+    });
+  }
+
+  function handleQuestionTypeToggle(type) {
+    const mcqFields = document.getElementById('q-mcq-fields');
+    const descFields = document.getElementById('q-desc-fields');
+    if (type === 'descriptive') {
+      mcqFields.hidden = true;
+      descFields.hidden = false;
+      document.getElementById('q-marks-input').value = '6';
+    } else {
+      mcqFields.hidden = false;
+      descFields.hidden = true;
+      document.getElementById('q-marks-input').value = '2';
+    }
+  }
+
+  function handleAddQuestion(event) {
+    if (event) event.preventDefault();
+    const examId = state.selectedQuestionExamId;
+    if (!examId) return;
+
+    const exams = getExaminations();
+    const exam = exams.find(e => e.id === examId);
+    if (!exam) return;
+
+    const type = document.getElementById('q-type-select').value;
+    const marks = parseInt(document.getElementById('q-marks-input').value, 10);
+    const questionText = document.getElementById('q-text-input').value.trim();
+
+    if (!exam.questions) exam.questions = [];
+    const newQId = exam.questions.length > 0 ? Math.max(...exam.questions.map(q => q.id)) + 1 : 1;
+
+    let newQuestion = {
+      id: newQId,
+      type: type,
+      marks: marks,
+      question: questionText
+    };
+
+    if (type === 'objective') {
+      newQuestion.options = [
+        { key: 'A', text: document.getElementById('q-opt-a').value.trim() },
+        { key: 'B', text: document.getElementById('q-opt-b').value.trim() },
+        { key: 'C', text: document.getElementById('q-opt-c').value.trim() },
+        { key: 'D', text: document.getElementById('q-opt-d').value.trim() }
+      ];
+      newQuestion.correctOption = document.getElementById('q-correct-opt').value;
+      newQuestion.explanation = document.getElementById('q-explanation').value.trim();
+    } else {
+      newQuestion.maxWords = parseInt(document.getElementById('q-maxwords').value, 10) || 250;
+      newQuestion.rubric = document.getElementById('q-rubric').value.trim();
+      newQuestion.modelAnswerKey = newQuestion.rubric;
+    }
+
+    exam.questions.push(newQuestion);
+    saveExaminations(exams);
+
+    // Reset inputs
+    document.getElementById('q-text-input').value = '';
+    document.getElementById('q-opt-a').value = '';
+    document.getElementById('q-opt-b').value = '';
+    document.getElementById('q-opt-c').value = '';
+    document.getElementById('q-opt-d').value = '';
+    document.getElementById('q-explanation').value = '';
+    document.getElementById('q-rubric').value = '';
+
+    handleQuestionExamChange(examId);
+    alert('Question added successfully to examination!');
+  }
+
+  function deleteQuestion(examId, qId) {
+    if (!confirm('Are you sure you want to delete this question?')) return;
+    const exams = getExaminations();
+    const exam = exams.find(e => e.id === examId);
+    if (!exam || !exam.questions) return;
+
+    exam.questions = exam.questions.filter(q => q.id !== qId);
+    saveExaminations(exams);
+    handleQuestionExamChange(examId);
+  }
+
+  function openQuestionsForExam(examId) {
+    state.selectedQuestionExamId = examId;
+    navigateToPage('page-manage-questions');
+  }
+
+  /* -------------------------------------------------------------
+   * PAGE 10: Evaluate Answers (Check descriptive answers and assign marks)
+   * ----------------------------------------------------------- */
+  function renderExaminerDashboard() {
+    const listContainer = document.getElementById('eval-list-container');
+    const formContainer = document.getElementById('eval-form-container');
+    listContainer.hidden = false;
+    formContainer.hidden = true;
 
     const container = document.getElementById('examiner-submissions-list');
     container.innerHTML = '';
 
     const submissions = getSubmissions();
+    const exams = getExaminations();
 
     if (submissions.length === 0) {
-      container.innerHTML = '<p>No student submissions found in the system yet.</p>';
+      container.innerHTML = '<p class="text-muted">No student submissions available for evaluation yet.</p>';
       return;
     }
 
-    const table = document.createElement('table');
-    table.border = '1';
-    table.cellPadding = '6';
-    table.cellSpacing = '0';
-    table.width = '100%';
+    submissions.forEach(sub => {
+      const exam = exams.find(e => e.id === sub.examId);
+      const isEvaluated = sub.evaluation && sub.evaluation.evaluated;
 
-    table.innerHTML = `
-      <thead>
-        <tr>
-          <th>Submission ID</th>
-          <th>Exam</th>
-          <th>Student Name (Roll)</th>
-          <th>Submitted At</th>
-          <th>Status</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${submissions.map(sub => {
-          const exam = INITIAL_DATA.examinations.find(e => e.id === sub.examId);
-          const isEvaluated = sub.evaluation && sub.evaluation.evaluated;
-          return `
-            <tr>
-              <td><b>${sub.submissionId}</b></td>
-              <td>${exam ? exam.code : sub.examId}</td>
-              <td>${escapeHtml(sub.studentName)} (${sub.studentRoll})</td>
-              <td>${new Date(sub.submittedAt).toLocaleString()}</td>
-              <td>
-                ${isEvaluated ? '<b><font color="green">[Result Published]</font></b>' : '<b><font color="orange">[Pending Grading]</font></b>'}
-              </td>
-              <td align="center">
-                ${isEvaluated ? `
-                  <button type="button" onclick="app.viewExamResult('${sub.submissionId}')">View Result</button>
-                  <button type="button" onclick="app.openExaminerEvaluation('${sub.submissionId}')">Re-grade</button>
-                ` : `
-                  <button type="button" onclick="app.openExaminerEvaluation('${sub.submissionId}')"><b>Grade Descriptive Answers</b></button>
-                `}
-              </td>
-            </tr>
-          `;
-        }).join('')}
-      </tbody>
-    `;
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.style.marginBottom = '14px';
 
-    container.appendChild(table);
+      card.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+          <div>
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+              <strong style="color:var(--primary); font-size:1.05rem;">${exam ? exam.code : sub.examId}</strong>
+              <span class="badge ${isEvaluated ? 'badge-success' : 'badge-warning'}">
+                ${isEvaluated ? 'Result Published' : 'Pending Evaluation'}
+              </span>
+            </div>
+            <h4 style="margin:2px 0;">${exam ? escapeHtml(exam.title) : 'Examination'}</h4>
+            <p style="margin:4px 0; font-size:0.88rem;">
+              <strong>Student:</strong> ${escapeHtml(sub.studentName)} (${sub.studentRoll}) &bull; ${escapeHtml(sub.department)}
+            </p>
+            <p style="margin:0; font-size:0.8rem; color:var(--text-muted);">
+              Submitted: ${new Date(sub.submittedAt).toLocaleString()} (${sub.submissionType})
+            </p>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            ${isEvaluated ? `
+              <button class="btn btn-secondary btn-sm" type="button" onclick="app.viewExamResult('${sub.submissionId}')">View Published Result</button>
+              <button class="btn btn-outline btn-sm" type="button" onclick="app.openExaminerEvaluation('${sub.submissionId}')">Re-grade</button>
+            ` : `
+              <button class="btn btn-primary" type="button" onclick="app.openExaminerEvaluation('${sub.submissionId}')">Evaluate Descriptive Answers</button>
+            `}
+          </div>
+        </div>
+      `;
+
+      container.appendChild(card);
+    });
   }
 
   function openExaminerEvaluation(submissionId) {
@@ -1061,17 +1589,21 @@
     const submission = submissions.find(s => s.submissionId === submissionId);
     if (!submission) return;
 
-    const exam = INITIAL_DATA.examinations.find(e => e.id === submission.examId);
+    const exams = getExaminations();
+    const exam = exams.find(e => e.id === submission.examId);
     if (!exam) return;
 
+    document.getElementById('eval-list-container').hidden = true;
+    document.getElementById('eval-form-container').hidden = false;
+
     document.getElementById('eval-exam-title').textContent = `${exam.code}: ${exam.title}`;
-    document.getElementById('eval-student-meta').textContent = `${submission.studentName} (${submission.studentRoll}) - ${submission.department}`;
+    document.getElementById('eval-student-meta').textContent = `Student: ${submission.studentName} (${submission.studentRoll}) | Submitted: ${new Date(submission.submittedAt).toLocaleString()}`;
     document.getElementById('eval-submission-id').value = submissionId;
 
     const formContainer = document.getElementById('eval-questions-form');
     formContainer.innerHTML = '';
 
-    const descriptiveQuestions = exam.questions.filter(q => q.type === 'descriptive');
+    const descriptiveQuestions = (exam.questions || []).filter(q => q.type === 'descriptive');
 
     if (descriptiveQuestions.length === 0) {
       formContainer.innerHTML = '<p>This examination contains only objective questions and was auto-evaluated.</p>';
@@ -1080,56 +1612,66 @@
         const studentAns = submission.answers[q.id] || '';
         const prevFeedback = (submission.evaluation && submission.evaluation.feedback && submission.evaluation.feedback[q.id]) || {};
 
-        const qFieldset = document.createElement('fieldset');
-        qFieldset.style.marginBottom = '16px';
+        const qBox = document.createElement('div');
+        qBox.className = 'card';
+        qBox.style.marginBottom = '20px';
 
-        qFieldset.innerHTML = `
-          <legend><b>Descriptive Question ${idx + 1} &bull; Max Marks: ${q.marks}</b></legend>
-          <p><b>Question:</b> ${escapeHtml(q.question)}</p>
+        qBox.innerHTML = `
+          <div class="question-header">
+            <span style="font-weight:700;">Descriptive Question ${idx + 1}</span>
+            <span class="badge badge-secondary">Max Marks: ${q.marks}</span>
+          </div>
+          <p style="font-weight:500;">${escapeHtml(q.question)}</p>
           
-          <p><b>Student's Submitted Answer:</b></p>
-          <pre>${escapeHtml(studentAns || '[Candidate left this answer blank]')}</pre>
+          <div style="background:#f7fafc; border-left:3px solid var(--primary); padding:10px 14px; margin-bottom:12px;">
+            <strong>Student's Submitted Response:</strong>
+            <pre style="white-space:pre-wrap; font-family:inherit; margin-top:6px; font-size:0.9rem;">${escapeHtml(studentAns || '[Student left this question blank]')}</pre>
+          </div>
 
-          <details style="margin-bottom:10px;">
-            <summary><b>Model Answer Key &amp; Rubric</b></summary>
-            <pre>${escapeHtml(q.modelAnswerKey || q.rubric)}</pre>
+          <details style="margin-bottom:14px;">
+            <summary style="font-size:0.85rem; cursor:pointer; color:var(--primary); font-weight:600;">
+              View Model Rubric &amp; Key
+            </summary>
+            <div style="background:#fffaf0; padding:10px; border-radius:4px; font-size:0.85rem; margin-top:6px; white-space:pre-wrap;">${escapeHtml(q.modelAnswerKey || q.rubric || 'N/A')}</div>
           </details>
 
-          <table border="1" cellpadding="6" cellspacing="0" width="100%">
-            <tr>
-              <td width="30%">
-                <label for="eval_marks_${q.id}"><b>Award Marks (0 to ${q.marks}):</b></label><br>
-                <input 
-                  type="number" 
-                  id="eval_marks_${q.id}" 
-                  min="0" 
-                  max="${q.marks}" 
-                  step="0.5" 
-                  value="${prevFeedback.marks !== undefined ? prevFeedback.marks : ''}" 
-                  required
-                >
-              </td>
-              <td width="70%">
-                <label for="eval_feedback_${q.id}"><b>Examiner Comments / Feedback:</b></label><br>
-                <input 
-                  type="text" 
-                  id="eval_feedback_${q.id}" 
-                  size="60" 
-                  placeholder="Feedback on candidate's response..." 
-                  value="${escapeHtml(prevFeedback.comments || '')}"
-                >
-              </td>
-            </tr>
-          </table>
+          <div style="display:grid; grid-template-columns:160px 1fr; gap:16px;">
+            <div class="form-group">
+              <label for="eval_marks_${q.id}">Award Marks (0 - ${q.marks}):</label>
+              <input 
+                type="number" 
+                id="eval_marks_${q.id}" 
+                class="form-control" 
+                min="0" 
+                max="${q.marks}" 
+                step="0.5" 
+                value="${prevFeedback.marks !== undefined ? prevFeedback.marks : ''}" 
+                required
+              >
+            </div>
+            <div class="form-group">
+              <label for="eval_feedback_${q.id}">Examiner Feedback / Comments:</label>
+              <input 
+                type="text" 
+                id="eval_feedback_${q.id}" 
+                class="form-control" 
+                placeholder="Specific comments on student's understanding..." 
+                value="${escapeHtml(prevFeedback.comments || '')}"
+              >
+            </div>
+          </div>
         `;
 
-        formContainer.appendChild(qFieldset);
+        formContainer.appendChild(qBox);
       });
     }
 
     document.getElementById('eval-general-remarks').value = (submission.evaluation && submission.evaluation.generalRemarks) || '';
+  }
 
-    navigateView('examiner-evaluate-view');
+  function closeExaminerGradingForm() {
+    document.getElementById('eval-list-container').hidden = false;
+    document.getElementById('eval-form-container').hidden = true;
   }
 
   function handleSaveAndPublishEvaluation(event) {
@@ -1144,13 +1686,13 @@
     }
 
     const sub = submissions[subIndex];
-    const exam = INITIAL_DATA.examinations.find(e => e.id === sub.examId);
+    const exams = getExaminations();
+    const exam = exams.find(e => e.id === sub.examId);
     if (!exam) return;
 
     let descriptiveTotal = 0;
     const feedbackMap = {};
-
-    const descriptiveQuestions = exam.questions.filter(q => q.type === 'descriptive');
+    const descriptiveQuestions = (exam.questions || []).filter(q => q.type === 'descriptive');
 
     for (const q of descriptiveQuestions) {
       const marksInput = document.getElementById(`eval_marks_${q.id}`);
@@ -1178,7 +1720,7 @@
 
     sub.evaluation = {
       evaluated: true,
-      evaluatedBy: state.currentUser.name,
+      evaluatedBy: state.currentUser ? state.currentUser.name : 'University Examiner',
       evaluatedAt: new Date().toISOString(),
       objectiveMarksObtained: objectiveMarks,
       descriptiveMarksObtained: descriptiveTotal,
@@ -1195,31 +1737,27 @@
 
     alert(`Marks published successfully!\nTotal Marks: ${finalTotalMarks} / ${exam.totalMarks} (${finalPercentage}%)\nResult: ${passed ? 'PASSED' : 'FAILED'}`);
     renderExaminerDashboard();
-    navigateView('examiner-dashboard');
   }
 
   /* -------------------------------------------------------------
-   * 15. Offline Detection & Simulated Connection Resilience
+   * Network Offline Simulation & Listeners
    * ----------------------------------------------------------- */
   function setupNetworkListeners() {
     window.addEventListener('online', () => {
-      if (!state.isOfflineSimulated) {
-        handleNetworkOnline();
-      }
+      if (!state.isOfflineSimulated) handleNetworkOnline();
     });
-
     window.addEventListener('offline', () => {
       handleNetworkOffline();
     });
   }
 
   function handleNetworkOffline() {
-    showNotificationBanner('⚠️ Network Disconnected: You are currently offline. All your answers are safely stored locally. You can continue answering.', 'offline');
+    showNotificationBanner('⚠️ Network Disconnected: You are currently offline. Answers are saved locally in browser storage.', 'offline');
     updateAutoSaveStatusUI();
   }
 
   function handleNetworkOnline() {
-    showNotificationBanner('🟢 Internet Connection Restored! System synchronized with latest saved answers.', 'online');
+    showNotificationBanner('🟢 Internet Connection Restored! System synchronized with saved answers.', 'reconnected');
     saveCurrentStateToStorage();
     updateAutoSaveStatusUI();
   }
@@ -1242,21 +1780,17 @@
     const textEl = document.getElementById('connection-status-text');
     if (!banner || !textEl) return;
 
-    textEl.innerHTML = type === 'offline' 
-      ? `<font color="red">${escapeHtml(message)}</font>` 
-      : `<font color="green">${escapeHtml(message)}</font>`;
+    textEl.textContent = message;
+    banner.className = `status-banner ${type}`;
     banner.hidden = false;
 
-    if (type === 'online') {
+    if (type === 'reconnected') {
       setTimeout(() => {
         banner.hidden = true;
       }, 5000);
     }
   }
 
-  /* -------------------------------------------------------------
-   * 16. Utility Helpers
-   * ----------------------------------------------------------- */
   function escapeHtml(str) {
     if (!str) return '';
     return String(str)
@@ -1268,13 +1802,16 @@
   }
 
   /* -------------------------------------------------------------
-   * 17. Application Expose & Initialization
+   * Expose API to Window
    * ----------------------------------------------------------- */
   window.app = {
+    navigateToPage,
+    toggleStyles,
+    switchAuthTab,
     handleLogin,
-    handleLogout,
+    handleStudentRegister,
     fillDemoCredentials,
-    navigateView,
+    handleLogout,
     showExamInstructions,
     startExam,
     resumeExam,
@@ -1286,19 +1823,32 @@
     nextQuestion,
     previousQuestion,
     setViewMode,
-    openReviewModal,
-    closeReviewModal,
-    closeReviewModalAndJump,
+    openReviewSubmitPage,
+    closeReviewAndJumpTo,
     submitExam,
     viewExamResult,
+    viewSampleResult,
+    renderAdminDashboard,
+    renderManageExams,
+    handleSaveExamination,
+    editExamination,
+    resetExamForm,
+    deleteExamination,
+    renderManageQuestions,
+    handleQuestionExamChange,
+    handleQuestionTypeToggle,
+    handleAddQuestion,
+    deleteQuestion,
+    openQuestionsForExam,
     renderExaminerDashboard,
     openExaminerEvaluation,
+    closeExaminerGradingForm,
     handleSaveAndPublishEvaluation,
     toggleSimulateOffline
   };
 
   document.addEventListener('DOMContentLoaded', () => {
-    initializeSubmissions();
+    initializeData();
     setupNetworkListeners();
     checkExistingSession();
   });

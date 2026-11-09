@@ -2,407 +2,888 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>University Online Examination System</title>
+  <link id="main-stylesheet" rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
   <!-- University Header -->
-  <header>
-    <h1>National University Examination Portal</h1>
-    <p>Online Examination &amp; Automated Evaluation System</p>
-    <div id="header-user-badge" hidden>
-      <p>
-        Signed in as: <b id="header-user-name">User</b> 
-        <span id="header-user-role">[Role]</span>
-        &nbsp;|&nbsp;
-        <button id="header-logout-btn" type="button" onclick="app.handleLogout()">Log Out</button>
-      </p>
+  <header class="univ-header">
+    <div class="container univ-header-content">
+      <div class="univ-title">
+        <h1>National University Examination Portal</h1>
+        <p>Online Examination, Question Bank &amp; Automated Evaluation System</p>
+      </div>
+      
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <!-- Dynamic Role Navigation -->
+        <nav id="header-nav-links" class="univ-nav" hidden>
+          <!-- Filled dynamically based on role -->
+        </nav>
+
+        <div id="header-user-badge" class="user-badge" hidden>
+          <span id="header-user-name">User</span>
+          <span id="header-user-role" class="badge badge-info">Role</span>
+        </div>
+
+        <button id="header-logout-btn" class="btn btn-secondary btn-sm" type="button" hidden onclick="app.handleLogout()">
+          Log Out
+        </button>
+
+        <button id="toggle-styles-btn" class="btn btn-outline btn-sm" style="color:#ffffff; border-color:#ffffff;" type="button" onclick="app.toggleStyles()">
+          Toggle CSS (On/Off)
+        </button>
+      </div>
     </div>
-    <hr>
   </header>
 
+  <!-- Page Directory Bar (Quick Jump to all 10 required pages) -->
+  <aside class="page-directory-bar">
+    <strong style="color:#90cdf4;">10-Page Directory:</strong>
+    <span style="color:#a0aec0;">Student:</span>
+    <button type="button" class="page-dir-btn" onclick="app.navigateToPage('page-login-register')">1. Login / Register</button>
+    <button type="button" class="page-dir-btn" onclick="app.navigateToPage('page-student-dashboard')">2. Student Dashboard</button>
+    <button type="button" class="page-dir-btn" onclick="app.showExamInstructions('EXAM-CS401')">3. Exam Instructions</button>
+    <button type="button" class="page-dir-btn" onclick="app.resumeExam('EXAM-CS401')">4. Examination Page</button>
+    <button type="button" class="page-dir-btn" onclick="app.openReviewSubmitPage()">5. Review &amp; Submit</button>
+    <button type="button" class="page-dir-btn" onclick="app.viewSampleResult()">6. Results Page</button>
+    <span style="color:#a0aec0; margin-left:8px;">Admin:</span>
+    <button type="button" class="page-dir-btn" onclick="app.navigateToPage('page-admin-dashboard')">7. Admin Dashboard</button>
+    <button type="button" class="page-dir-btn" onclick="app.navigateToPage('page-manage-exams')">8. Manage Examinations</button>
+    <button type="button" class="page-dir-btn" onclick="app.navigateToPage('page-manage-questions')">9. Manage Questions</button>
+    <span style="color:#a0aec0; margin-left:8px;">Examiner:</span>
+    <button type="button" class="page-dir-btn" onclick="app.navigateToPage('page-evaluate-answers')">10. Evaluate Answers</button>
+  </aside>
+
   <!-- Network Connection / Offline Alert Banner -->
-  <div id="connection-status-banner" hidden>
-    <p><b id="connection-status-text">Connection Alert</b></p>
-    <hr>
+  <div id="connection-status-banner" class="status-banner" hidden>
+    <span id="connection-status-text">Connection Alert</span>
   </div>
 
-  <main>
+  <main class="container" style="padding-top: 18px; padding-bottom: 50px;">
 
     <!-- =========================================================================
-         VIEW 1: Authentication / Login
+         PAGE 1: Login / Register (Student authentication)
          ========================================================================= -->
-    <section id="login-view">
-      <fieldset>
-        <legend><h2>Candidate &amp; Examiner Login</h2></legend>
-        <p>Please enter your registered university credentials to authenticate.</p>
-
-        <div id="login-error" hidden>
-          <p><b><font color="red" id="login-error-text">Invalid credentials</font></b></p>
+    <section id="page-login-register">
+      <div style="max-width: 500px; margin: 30px auto;" class="card">
+        <div class="card-header">
+          <h2 class="card-title">University Portal Authentication</h2>
         </div>
 
-        <form onsubmit="app.handleLogin(event)">
-          <p>
-            <label for="login-userid"><b>Student ID / Examiner ID:</b></label><br>
-            <input type="text" id="login-userid" placeholder="e.g. STU202601 or EXAM2026" required autocomplete="username" size="30">
-          </p>
-
-          <p>
-            <label for="login-password"><b>Password:</b></label><br>
-            <input type="password" id="login-password" placeholder="Enter password" required autocomplete="current-password" size="30">
-          </p>
-
-          <p>
-            <button type="submit">Authenticate &amp; Sign In</button>
-          </p>
-        </form>
-
-        <hr>
-        <p><b>Quick Demo Accounts (Click to Fill):</b></p>
-        <p>
-          <button type="button" onclick="app.fillDemoCredentials('STU202601', 'password123')">
-            Demo Student 1 (Priya Sharma - B.Tech CSE)
+        <!-- Authentication Tabs: Login vs Register -->
+        <div class="tab-group">
+          <button type="button" id="tab-login-btn" class="tab-btn active" onclick="app.switchAuthTab('login')">
+            Portal Sign In
           </button>
-          &nbsp;
-          <button type="button" onclick="app.fillDemoCredentials('STU202602', 'password123')">
-            Demo Student 2 (Rahul Verma - B.Tech IT)
+          <button type="button" id="tab-register-btn" class="tab-btn" onclick="app.switchAuthTab('register')">
+            Student Registration
           </button>
-          &nbsp;
-          <button type="button" onclick="app.fillDemoCredentials('EXAM2026', 'admin123')">
-            Examiner (Dr. K. Ramanathan)
-          </button>
-        </p>
-      </fieldset>
+        </div>
+
+        <!-- Sub-View A: Login Form -->
+        <div id="auth-login-box">
+          <div id="login-error" class="badge badge-danger" style="display:block; padding:8px; margin-bottom:12px; text-align:center;" hidden></div>
+
+          <form onsubmit="app.handleLogin(event)">
+            <div class="form-group">
+              <label for="login-userid">User ID / Registration No. / Email</label>
+              <input type="text" id="login-userid" class="form-control" placeholder="e.g. STU202601, ADMIN2026, or EXAM2026" required autocomplete="username">
+            </div>
+
+            <div class="form-group">
+              <label for="login-password">Password</label>
+              <input type="password" id="login-password" class="form-control" placeholder="Enter your password" required autocomplete="current-password">
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width:100%; padding:10px; font-size:1rem;">
+              Sign In to Portal
+            </button>
+          </form>
+
+          <div style="background:#f7fafc; border:1px dashed var(--border-color); border-radius:6px; padding:12px; margin-top:20px; font-size:0.85rem;">
+            <p style="margin-bottom:6px; font-weight:600;">One-Click Demo Credentials:</p>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <button type="button" class="btn btn-outline btn-sm" onclick="app.fillDemoCredentials('STU202601', 'password123')">
+                Student 1 (Priya)
+              </button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="app.fillDemoCredentials('STU202602', 'password123')">
+                Student 2 (Rahul)
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="app.fillDemoCredentials('ADMIN2026', 'admin123')">
+                Admin (Exam Controller)
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="app.fillDemoCredentials('EXAM2026', 'admin123')">
+                Examiner (Evaluator)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub-View B: Student Registration Form -->
+        <div id="auth-register-box" hidden>
+          <div id="register-msg" class="badge badge-success" style="display:block; padding:8px; margin-bottom:12px; text-align:center;" hidden></div>
+
+          <form onsubmit="app.handleStudentRegister(event)">
+            <div class="form-group">
+              <label for="reg-name">Full Name</label>
+              <input type="text" id="reg-name" class="form-control" placeholder="e.g. Ananya Sen" required>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="reg-roll">Roll / Registration No.</label>
+                <input type="text" id="reg-roll" class="form-control" placeholder="e.g. 2026-CS-088" required>
+              </div>
+              <div class="form-group">
+                <label for="reg-semester">Semester</label>
+                <select id="reg-semester" class="form-control">
+                  <option value="6th Semester">6th Semester</option>
+                  <option value="4th Semester">4th Semester</option>
+                  <option value="8th Semester">8th Semester</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="reg-dept">Academic Department</label>
+              <input type="text" id="reg-dept" class="form-control" placeholder="e.g. Computer Science &amp; Engineering" required>
+            </div>
+
+            <div class="form-group">
+              <label for="reg-email">University Email</label>
+              <input type="email" id="reg-email" class="form-control" placeholder="e.g. ananya.sen@university.edu" required>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="reg-password">Create Password</label>
+                <input type="password" id="reg-password" class="form-control" placeholder="Minimum 6 characters" required>
+              </div>
+              <div class="form-group">
+                <label for="reg-confirm-password">Confirm Password</label>
+                <input type="password" id="reg-confirm-password" class="form-control" placeholder="Re-type password" required>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-success" style="width:100%; padding:10px; font-size:1rem;">
+              Complete Registration &amp; Create Account
+            </button>
+          </form>
+        </div>
+      </div>
     </section>
 
     <!-- =========================================================================
-         VIEW 2: Student Dashboard (Available Examinations)
+         PAGE 2: Student Dashboard (Available and upcoming exams)
          ========================================================================= -->
-    <section id="student-dashboard" hidden>
-      <fieldset>
-        <legend><h3>Student Profile</h3></legend>
-        <table border="1" cellpadding="6" cellspacing="0" width="100%">
-          <tr>
-            <td><b>Student Name:</b></td>
-            <td id="profile-student-name">-</td>
-            <td><b>Roll / Reg No:</b></td>
-            <td id="profile-student-roll">-</td>
-          </tr>
-          <tr>
-            <td><b>Department:</b></td>
-            <td id="profile-student-dept">-</td>
-            <td><b>Semester:</b></td>
-            <td id="profile-student-sem">-</td>
-          </tr>
-        </table>
-      </fieldset>
-
-      <br>
-
-      <fieldset>
-        <legend><h3>Available University Examinations</h3></legend>
-        <p>The following examinations are assigned to your profile. Select an examination to view instructions and start.</p>
-        <div id="available-exams-list">
-          <!-- Dynamically populated exam list -->
+    <section id="page-student-dashboard" hidden>
+      <!-- Student Profile Card -->
+      <div class="card" style="background:#ffffff; border-left:4px solid var(--primary);">
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
+          <div>
+            <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">STUDENT NAME</div>
+            <div id="profile-student-name" style="font-size:1.1rem; font-weight:700; color:var(--primary);">-</div>
+          </div>
+          <div>
+            <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">ROLL / REG NO.</div>
+            <div id="profile-student-roll" style="font-size:1.05rem; font-weight:600;">-</div>
+          </div>
+          <div>
+            <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">DEPARTMENT</div>
+            <div id="profile-student-dept" style="font-size:1rem; font-weight:600;">-</div>
+          </div>
+          <div>
+            <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">SEMESTER</div>
+            <div id="profile-student-sem" style="font-size:1rem; font-weight:600;">-</div>
+          </div>
         </div>
-      </fieldset>
+      </div>
+
+      <!-- Section: Available Examinations -->
+      <div class="card-header" style="margin-top:24px;">
+        <h2 class="card-title">Available University Examinations</h2>
+        <span class="text-muted" style="font-size:0.85rem;">Examinations currently open for taking</span>
+      </div>
+      <div id="available-exams-list" class="exam-grid">
+        <!-- Dynamically rendered active exam cards -->
+      </div>
+
+      <!-- Section: Upcoming Examinations -->
+      <div class="card-header" style="margin-top:30px;">
+        <h2 class="card-title">Upcoming Scheduled Examinations</h2>
+        <span class="text-muted" style="font-size:0.85rem;">Upcoming examinations scheduled by the University Controller</span>
+      </div>
+      <div id="upcoming-exams-list" class="exam-grid">
+        <!-- Dynamically rendered upcoming exam cards -->
+      </div>
     </section>
 
     <!-- =========================================================================
-         VIEW 3: Examination Instructions
+         PAGE 3: Exam Instructions (Rules, duration and exam details)
          ========================================================================= -->
-    <section id="exam-instructions-view" hidden>
-      <fieldset>
-        <legend><h2>Examination Guidelines &amp; Instructions</h2></legend>
+    <section id="page-exam-instructions" hidden>
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <span id="inst-exam-code" class="badge badge-info" style="font-size:0.85rem;">CODE</span>
+            <h2 id="inst-exam-title" class="card-title" style="margin-top:4px;">Examination Title</h2>
+          </div>
+          <button class="btn btn-secondary btn-sm" type="button" onclick="app.navigateToPage('page-student-dashboard')">
+            &larr; Back to Dashboard
+          </button>
+        </div>
 
-        <p>
-          <button type="button" onclick="app.navigateView('student-dashboard')">&larr; Return to Dashboard</button>
-        </p>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px; background:#f7fafc; padding:14px; border-radius:6px; margin-bottom:20px; border:1px solid var(--border-color);">
+          <div>
+            <span class="text-muted" style="font-size:0.8rem; display:block;">DURATION</span>
+            <strong id="inst-exam-duration">-</strong>
+          </div>
+          <div>
+            <span class="text-muted" style="font-size:0.8rem; display:block;">NUMBER OF QUESTIONS</span>
+            <strong id="inst-exam-questions">-</strong>
+          </div>
+          <div>
+            <span class="text-muted" style="font-size:0.8rem; display:block;">TOTAL MARKS</span>
+            <strong id="inst-exam-marks">-</strong>
+          </div>
+          <div>
+            <span class="text-muted" style="font-size:0.8rem; display:block;">PASSING MARKS</span>
+            <strong id="inst-exam-pass">-</strong>
+          </div>
+        </div>
 
-        <table border="1" cellpadding="6" cellspacing="0" width="100%">
-          <tr>
-            <td><b>Course Code:</b></td>
-            <td id="inst-exam-code">-</td>
-            <td><b>Course Title:</b></td>
-            <td id="inst-exam-title">-</td>
-          </tr>
-          <tr>
-            <td><b>Duration:</b></td>
-            <td id="inst-exam-duration">-</td>
-            <td><b>Total Questions:</b></td>
-            <td id="inst-exam-questions">-</td>
-          </tr>
-          <tr>
-            <td><b>Total Marks:</b></td>
-            <td id="inst-exam-marks">-</td>
-            <td><b>Passing Marks:</b></td>
-            <td id="inst-exam-pass">-</td>
-          </tr>
-        </table>
-
-        <h3>Instructions to Candidates:</h3>
-        <ol id="inst-instructions-list">
+        <h3 style="font-size:1.1rem; margin-bottom:12px;">Mandatory Rules &amp; Examination Guidelines:</h3>
+        <ol id="inst-instructions-list" style="margin-left:20px; margin-bottom:20px; line-height:1.8;">
           <!-- Dynamically populated instructions -->
         </ol>
 
-        <p>
-          <label>
+        <div style="background-color:var(--info-bg); border-left:4px solid var(--info); padding:14px; margin-bottom:20px; border-radius:0 6px 6px 0;">
+          <label style="display:flex; align-items:center; gap:10px; font-weight:600; cursor:pointer;">
             <input type="checkbox" id="inst-agree-checkbox">
-            <b>I have read, understood, and agreed to abide by all the examination rules and university conduct regulations.</b>
+            <span>I have read, understood, and agreed to abide by all the examination rules and university conduct regulations.</span>
           </label>
-        </p>
+        </div>
 
-        <p>
-          <button id="inst-start-btn" type="button" disabled onclick="app.startExam(false)">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+          <button class="btn btn-secondary" type="button" onclick="app.navigateToPage('page-student-dashboard')">
+            Cancel
+          </button>
+          <button id="inst-start-btn" class="btn btn-success" style="padding:10px 24px; font-size:1rem;" disabled onclick="app.startExam(false)">
             Start Examination Now &rarr;
           </button>
-          &nbsp;
-          <button type="button" onclick="app.navigateView('student-dashboard')">Cancel</button>
-        </p>
-      </fieldset>
+        </div>
+      </div>
     </section>
 
     <!-- =========================================================================
-         VIEW 4: Live Examination Interface
+         PAGE 4: Examination Page (Display questions, timer and answer selection)
          ========================================================================= -->
-    <section id="active-exam-view" hidden>
-      <!-- Top Status Bar -->
-      <fieldset>
-        <legend><h3>Active Examination</h3></legend>
-        <table border="1" cellpadding="6" cellspacing="0" width="100%">
-          <tr>
-            <td>
-              <b>Exam:</b> <span id="live-exam-title">Examination Title</span>
-            </td>
-            <td>
-              <b>Question Display:</b>
-              <select id="view-mode-select" onchange="app.setViewMode(this.value)">
-                <option value="one-by-one">One-by-One Question</option>
-                <option value="all">All Questions View</option>
-              </select>
-            </td>
-            <td>
-              <b>⏱ Time Remaining:</b> <span id="timer-countdown-text">00:00</span>
-              <span id="timer-warning-label" hidden><b><font color="red"> (WARNING: Time Running Out!)</font></b></span>
-            </td>
-            <td>
-              <b>Auto-Save:</b> <span id="exam-autosave-status">[Auto-saved]</span>
-            </td>
-          </tr>
-        </table>
+    <section id="page-examination" hidden>
+      <!-- Top Sticky Status Bar -->
+      <div class="exam-top-bar">
+        <div>
+          <h2 id="live-exam-title" style="margin:0; font-size:1.15rem;">Exam Title</h2>
+          <div id="exam-autosave-status" class="autosave-status">
+            <span>●</span> Auto-saved
+          </div>
+        </div>
 
-        <p>
-          <b>Network Resilience Testing:</b>
-          <button id="offline-simulation-btn" type="button" onclick="app.toggleSimulateOffline()">
+        <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+          <div>
+            <label for="view-mode-select" style="font-size:0.8rem; font-weight:600; color:var(--text-muted); display:block;">Question Display:</label>
+            <select id="view-mode-select" class="form-control" style="padding:4px 8px; font-size:0.85rem;" onchange="app.setViewMode(this.value)">
+              <option value="one-by-one">One-by-One Question</option>
+              <option value="all">All Questions View</option>
+            </select>
+          </div>
+
+          <div id="exam-timer" class="timer-box" title="Remaining examination time">
+            <span>⏱ Remaining:</span>
+            <span id="timer-countdown-text">00:00</span>
+          </div>
+
+          <button class="btn btn-danger btn-sm" type="button" onclick="app.openReviewSubmitPage()">
+            Review &amp; Submit
+          </button>
+        </div>
+      </div>
+
+      <!-- Network Resilience Simulation Bar -->
+      <div style="background:#edf2f7; border-radius:6px; padding:8px 14px; margin-bottom:16px; font-size:0.82rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+        <div>
+          <strong>Network Resilience Testing:</strong>
+          <button id="offline-simulation-btn" class="btn btn-secondary btn-sm" type="button" onclick="app.toggleSimulateOffline()">
             Simulate Connection Drop
           </button>
-          <i>(Tests offline answer persistence and automatic sync upon reconnect)</i>
-        </p>
-      </fieldset>
+          <span class="text-muted">(Tests offline answer persistence &amp; auto-sync upon reconnect)</span>
+        </div>
+      </div>
 
-      <br>
+      <!-- Examination Grid (Questions + Palette) -->
+      <div class="exam-layout">
+        <!-- Left: Question Panel -->
+        <div class="question-panel">
+          <div id="single-question-container">
+            <!-- Dynamically populated question text and options -->
+          </div>
 
-      <!-- Question and Palette layout using a semantic HTML table -->
-      <table border="1" cellpadding="10" cellspacing="0" width="100%">
-        <tr valign="top">
-          <!-- Left Column: Question Content -->
-          <td width="70%">
-            <!-- Single Question Container -->
-            <div id="single-question-container">
-              <!-- Dynamically populated question text and options -->
+          <div id="all-questions-container" hidden>
+            <!-- All questions list -->
+          </div>
+
+          <!-- Question Navigation Buttons -->
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; border-top:1px solid #edf2f7; padding-top:16px; margin-top:20px;">
+            <div style="display:flex; gap:10px;">
+              <button id="btn-prev-question" class="btn btn-secondary" type="button" onclick="app.previousQuestion()">
+                &larr; Previous
+              </button>
+              <button id="btn-toggle-review" class="btn btn-secondary" type="button" onclick="app.toggleReviewFlag()">
+                ☆ Mark for Review
+              </button>
             </div>
-
-            <!-- All Questions View Container -->
-            <div id="all-questions-container" hidden>
-              <!-- Dynamically populated list of all questions -->
+            <div style="display:flex; gap:10px;">
+              <button id="btn-next-question" class="btn btn-primary" type="button" onclick="app.nextQuestion()">
+                Next Question &rarr;
+              </button>
+              <button class="btn btn-danger" type="button" onclick="app.openReviewSubmitPage()">
+                Finish &amp; Review &rarr;
+              </button>
             </div>
-
-            <hr>
-            <p>
-              <button id="btn-prev-question" type="button" onclick="app.previousQuestion()">&larr; Previous Question</button>
-              &nbsp;
-              <button id="btn-toggle-review" type="button" onclick="app.toggleReviewFlag()">☆ Mark for Review</button>
-              &nbsp;
-              <button id="btn-next-question" type="button" onclick="app.nextQuestion()">Next Question &rarr;</button>
-              &nbsp;|&nbsp;
-              <button type="button" onclick="app.openReviewModal()"><b>Review &amp; Submit Examination</b></button>
-            </p>
-          </td>
-
-          <!-- Right Column: Question Palette Navigation -->
-          <td width="30%">
-            <fieldset>
-              <legend><b>Question Palette</b></legend>
-              <p>Click any question number to navigate directly:</p>
-              
-              <div id="question-palette-grid">
-                <!-- Dynamically generated numbered buttons -->
-              </div>
-
-              <hr>
-              <p><b>Palette Legend:</b></p>
-              <ul>
-                <li>[✓ Answered]: <span id="palette-count-answered">0</span></li>
-                <li>[• Not Answered]: <span id="palette-count-not-answered">0</span></li>
-                <li>[? Marked for Review]: <span id="palette-count-review">0</span></li>
-                <li>[  Not Visited]: <span id="palette-count-not-visited">0</span></li>
-              </ul>
-
-              <hr>
-              <p>
-                <button type="button" onclick="app.openReviewModal()">
-                  <b>Finish &amp; Submit Exam</b>
-                </button>
-              </p>
-            </fieldset>
-          </td>
-        </tr>
-      </table>
-    </section>
-
-    <!-- =========================================================================
-         VIEW 5: Review & Confirmation Section
-         ========================================================================= -->
-    <section id="review-submit-modal" hidden>
-      <fieldset>
-        <legend><h2>Review Examination Before Final Submission</h2></legend>
-        <p>Please review your attempt status below. You may modify any answers prior to final submission.</p>
-
-        <table border="1" cellpadding="6" cellspacing="0" width="100%">
-          <tr>
-            <th>Total Questions</th>
-            <th>Answered</th>
-            <th>Unanswered</th>
-            <th>Marked for Review</th>
-          </tr>
-          <tr align="center">
-            <td id="modal-stat-total">0</td>
-            <td><b id="modal-stat-answered">0</b></td>
-            <td><b id="modal-stat-unanswered">0</b></td>
-            <td id="modal-stat-review">0</td>
-          </tr>
-        </table>
-
-        <div id="review-unanswered-warning" hidden>
-          <p>
-            <b><font color="red">⚠️ Warning: You have <span id="unanswered-count-text">0</span> unanswered question(s). Unanswered questions will receive 0 marks.</font></b>
-          </p>
+          </div>
         </div>
 
-        <h3>Question-by-Question Attempt Summary:</h3>
-        <table border="1" cellpadding="6" cellspacing="0" width="100%">
-          <thead>
-            <tr>
-              <th>Question No.</th>
-              <th>Question Type</th>
-              <th>Current Status</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="review-modal-question-list">
-            <!-- Dynamically populated summary rows -->
-          </tbody>
-        </table>
+        <!-- Right: Question Palette -->
+        <aside class="palette-card">
+          <h3 style="font-size:1rem; margin-bottom:12px; border-bottom:1px solid #edf2f7; padding-bottom:8px;">
+            Question Palette
+          </h3>
 
-        <hr>
-        <p>
-          <button type="button" onclick="app.closeReviewModal()">&larr; Return to Examination to Modify Answers</button>
-          &nbsp;&nbsp;
-          <button type="button" onclick="app.submitExam(false)"><b>Confirm Final Submission</b></button>
-        </p>
-      </fieldset>
+          <div id="question-palette-grid" class="palette-grid">
+            <!-- Dynamically generated numbered buttons -->
+          </div>
+
+          <div style="font-size:0.8rem; display:flex; flex-direction:column; gap:6px; border-top:1px solid #edf2f7; padding-top:12px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="width:14px; height:14px; background:var(--success); border-radius:3px; display:inline-block;"></span>
+              <span>Answered (<span id="palette-count-answered">0</span>)</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="width:14px; height:14px; background:var(--warning-bg); border:1px solid #fbd38d; border-radius:3px; display:inline-block;"></span>
+              <span>Not Answered (<span id="palette-count-not-answered">0</span>)</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="width:14px; height:14px; background:var(--review); border-radius:3px; display:inline-block;"></span>
+              <span>Marked for Review (<span id="palette-count-review">0</span>)</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="width:14px; height:14px; background:#edf2f7; border:1px solid #cbd5e0; border-radius:3px; display:inline-block;"></span>
+              <span>Not Visited (<span id="palette-count-not-visited">0</span>)</span>
+            </div>
+          </div>
+
+          <div style="margin-top:16px;">
+            <button class="btn btn-danger" style="width:100%;" type="button" onclick="app.openReviewSubmitPage()">
+              Review &amp; Submit Exam
+            </button>
+          </div>
+        </aside>
+      </div>
     </section>
 
     <!-- =========================================================================
-         VIEW 6: Examination Results & Evaluation Record
+         PAGE 5: Review & Submit (Review and modify answers before submission)
          ========================================================================= -->
-    <section id="result-view" hidden>
-      <fieldset>
-        <legend><h2>University Examination Result Card</h2></legend>
-        <h3 id="res-exam-title">Examination Title</h3>
+    <section id="page-review-submit" hidden>
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <span class="badge badge-warning" style="margin-bottom:4px;">VERIFICATION STAGE</span>
+            <h2 class="card-title">Review &amp; Confirm Examination Submission</h2>
+            <p class="text-muted" style="margin:0; font-size:0.85rem;">Review your attempt status below. You can return to any question to modify your answers before final submission.</p>
+          </div>
+          <button class="btn btn-secondary btn-sm" type="button" onclick="app.navigateToPage('page-examination')">
+            &larr; Back to Examination
+          </button>
+        </div>
 
-        <table border="1" cellpadding="6" cellspacing="0" width="100%">
-          <tr>
-            <td><b>Candidate:</b></td>
-            <td id="res-student-info">-</td>
-            <td><b>Submission ID:</b></td>
-            <td id="res-submission-id">-</td>
-          </tr>
-          <tr>
-            <td><b>Submission Timestamp:</b></td>
-            <td id="res-submission-time">-</td>
-            <td><b>Submission Mode:</b></td>
-            <td id="res-submission-mode">-</td>
-          </tr>
-          <tr>
-            <td><b>Final Marks:</b></td>
-            <td><b id="res-score-value">0 / 0</b></td>
-            <td><b>Percentage &amp; Result:</b></td>
-            <td>
-              <span id="res-score-percentage">-</span> &nbsp;|&nbsp; 
-              <b id="res-status-badge">RESULT</b>
-            </td>
-          </tr>
-        </table>
+        <!-- Summary Statistics Grid -->
+        <div class="stats-grid">
+          <div class="stat-box">
+            <div id="modal-stat-total" class="stat-val">0</div>
+            <div class="stat-label">Total Questions</div>
+          </div>
+          <div class="stat-box" style="border-top:3px solid var(--success);">
+            <div id="modal-stat-answered" class="stat-val" style="color:var(--success);">0</div>
+            <div class="stat-label">Answered</div>
+          </div>
+          <div class="stat-box" style="border-top:3px solid var(--warning);">
+            <div id="modal-stat-unanswered" class="stat-val" style="color:var(--warning);">0</div>
+            <div class="stat-label">Unanswered</div>
+          </div>
+          <div class="stat-box" style="border-top:3px solid var(--review);">
+            <div id="modal-stat-review" class="stat-val" style="color:var(--review);">0</div>
+            <div class="stat-label">Marked for Review</div>
+          </div>
+        </div>
 
-        <p id="res-marks-breakdown">
+        <div id="review-unanswered-warning" class="status-banner offline" style="margin-bottom:16px; border-radius:6px;" hidden>
+          ⚠️ Warning: You still have <span id="unanswered-count-text">0</span> unanswered questions. Unanswered questions receive 0 marks.
+        </div>
+
+        <!-- Questions Status Table -->
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Question No.</th>
+                <th>Question Type</th>
+                <th>Marks</th>
+                <th>Current Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="review-modal-question-list">
+              <!-- Dynamically populated summary rows -->
+            </tbody>
+          </table>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-top:20px; border-top:1px solid var(--border-color); padding-top:16px;">
+          <button class="btn btn-secondary" type="button" onclick="app.navigateToPage('page-examination')">
+            &larr; Return to Examination to Modify Answers
+          </button>
+          <button class="btn btn-danger" style="padding:10px 24px; font-size:1rem;" type="button" onclick="app.submitExam(false)">
+            Confirm &amp; Finalize Submission &rarr;
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         PAGE 6: Results Page (Display marks and examination results)
+         ========================================================================= -->
+    <section id="page-results" hidden>
+      <!-- Result Scorecard Banner -->
+      <div class="result-header-card">
+        <h2 id="res-exam-title">Examination Result</h2>
+        <div id="res-status-badge" class="result-badge-large badge-success">PASSED</div>
+        
+        <div class="score-display" id="res-score-value">0 / 0</div>
+        <p id="res-score-percentage" style="font-size:1.1rem; font-weight:600; color:var(--secondary);">-</p>
+
+        <div id="res-marks-breakdown" style="margin-top:10px; font-size:0.95rem;">
           <!-- Marks breakdown details -->
-        </p>
-
-        <p>
-          <button type="button" onclick="window.print()">Print / Save Result</button>
-          &nbsp;
-          <button type="button" onclick="app.navigateView('student-dashboard')">Return to Student Dashboard</button>
-        </p>
-      </fieldset>
-
-      <br>
-
-      <fieldset>
-        <legend><h3>Detailed Question-by-Question Evaluation Breakdown</h3></legend>
-        <p><i>Objective questions are evaluated automatically by the system. Descriptive answers are reviewed and scored by the appointed course examiner.</i></p>
-        <div id="res-questions-breakdown">
-          <!-- Detailed questions breakdown -->
         </div>
-      </fieldset>
+
+        <div style="margin-top:16px; display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
+          <button class="btn btn-secondary btn-sm" type="button" onclick="window.print()">
+            🖨 Print / Save Result Card
+          </button>
+          <button class="btn btn-primary btn-sm" type="button" onclick="app.navigateToPage('page-student-dashboard')">
+            Return to Student Dashboard
+          </button>
+        </div>
+      </div>
+
+      <!-- Submission Record Metadata -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Submission Verification Record</h3>
+        </div>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px; font-size:0.9rem;">
+          <div>
+            <span class="text-muted">Submission Reference ID:</span><br>
+            <strong id="res-submission-id">-</strong>
+          </div>
+          <div>
+            <span class="text-muted">Candidate:</span><br>
+            <strong id="res-student-info">-</strong>
+          </div>
+          <div>
+            <span class="text-muted">Recorded Submission Time:</span><br>
+            <strong id="res-submission-time">-</strong>
+          </div>
+          <div>
+            <span class="text-muted">Submission Mode:</span><br>
+            <strong id="res-submission-mode">-</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Question-by-Question Evaluation Breakdown -->
+      <div class="card-header" style="margin-top:24px;">
+        <h3 class="card-title">Detailed Question Evaluation Breakdown</h3>
+        <span class="text-muted" style="font-size:0.85rem;">Objective questions are auto-evaluated; descriptive questions are graded with examiner feedback</span>
+      </div>
+
+      <div id="res-questions-breakdown">
+        <!-- Dynamically rendered question review cards -->
+      </div>
     </section>
 
     <!-- =========================================================================
-         VIEW 7: Examiner Submissions Dashboard
+         PAGE 7: Admin Dashboard (Statistics and examination overview)
          ========================================================================= -->
-    <section id="examiner-dashboard" hidden>
-      <fieldset>
-        <legend><h2>Examiner Evaluation Portal</h2></legend>
-        <p>Review candidate submissions, award descriptive marks, provide evaluation remarks, and publish final results.</p>
-        <p>
-          <button type="button" onclick="app.handleLogout()">Sign Out</button>
-        </p>
+    <section id="page-admin-dashboard" hidden>
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">University Administration Portal</h2>
+          <p class="text-muted" style="margin:0; font-size:0.85rem;">Examination system metrics, candidate performance, and academic controls.</p>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-primary btn-sm" type="button" onclick="app.navigateToPage('page-manage-exams')">
+            + Manage Examinations
+          </button>
+          <button class="btn btn-secondary btn-sm" type="button" onclick="app.navigateToPage('page-manage-questions')">
+            Manage Question Bank
+          </button>
+        </div>
+      </div>
 
-        <h3>Candidate Submissions Pending / Completed:</h3>
+      <!-- Key Statistics Grid -->
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div id="admin-stat-students" class="stat-val">0</div>
+          <div class="stat-label">Registered Students</div>
+        </div>
+        <div class="stat-box">
+          <div id="admin-stat-exams" class="stat-val">0</div>
+          <div class="stat-label">Total Examinations</div>
+        </div>
+        <div class="stat-box">
+          <div id="admin-stat-questions" class="stat-val">0</div>
+          <div class="stat-label">Total Questions</div>
+        </div>
+        <div class="stat-box">
+          <div id="admin-stat-submissions" class="stat-val">0</div>
+          <div class="stat-label">Student Submissions</div>
+        </div>
+        <div class="stat-box">
+          <div id="admin-stat-passrate" class="stat-val">0%</div>
+          <div class="stat-label">Pass Percentage</div>
+        </div>
+      </div>
+
+      <!-- Examinations Overview Table -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Examinations Catalog &amp; Status</h3>
+          <button class="btn btn-primary btn-sm" type="button" onclick="app.navigateToPage('page-manage-exams')">
+            Add New Exam
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Title</th>
+                <th>Department</th>
+                <th>Date</th>
+                <th>Duration</th>
+                <th>Questions</th>
+                <th>Total Marks</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-exams-overview-table">
+              <!-- Dynamically populated rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Recent Submissions Overview Table -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Recent Submissions &amp; Evaluation Log</h3>
+        </div>
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Submission ID</th>
+                <th>Exam</th>
+                <th>Student</th>
+                <th>Submitted At</th>
+                <th>Score</th>
+                <th>Evaluation Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="admin-recent-submissions-table">
+              <!-- Dynamically populated rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         PAGE 8: Manage Examinations (Create, edit and delete examinations)
+         ========================================================================= -->
+    <section id="page-manage-exams" hidden>
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">Manage Examinations</h2>
+          <p class="text-muted" style="margin:0; font-size:0.85rem;">Create new course assessments, configure dates and durations, or modify existing exams.</p>
+        </div>
+        <button class="btn btn-secondary btn-sm" type="button" onclick="app.navigateToPage('page-admin-dashboard')">
+          &larr; Back to Admin Dashboard
+        </button>
+      </div>
+
+      <!-- Create / Edit Examination Card -->
+      <div class="card" style="border-top:3px solid var(--primary);">
+        <div class="card-header">
+          <h3 id="manage-exam-form-title" class="card-title">Create New Examination</h3>
+          <button id="cancel-edit-exam-btn" class="btn btn-secondary btn-sm" type="button" hidden onclick="app.resetExamForm()">
+            Cancel Edit
+          </button>
+        </div>
+
+        <form onsubmit="app.handleSaveExamination(event)">
+          <input type="hidden" id="edit-exam-id">
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="exam-input-code">Course / Exam Code</label>
+              <input type="text" id="exam-input-code" class="form-control" placeholder="e.g. CS404" required>
+            </div>
+            <div class="form-group">
+              <label for="exam-input-title">Examination Title</label>
+              <input type="text" id="exam-input-title" class="form-control" placeholder="e.g. Software Engineering &amp; Architecture" required>
+            </div>
+            <div class="form-group">
+              <label for="exam-input-dept">Department</label>
+              <input type="text" id="exam-input-dept" class="form-control" placeholder="e.g. Computer Science &amp; Engineering" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="exam-input-date">Examination Date</label>
+              <input type="date" id="exam-input-date" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label for="exam-input-duration">Duration (Minutes)</label>
+              <input type="number" id="exam-input-duration" class="form-control" min="5" max="300" value="15" required>
+            </div>
+            <div class="form-group">
+              <label for="exam-input-totalmarks">Total Marks</label>
+              <input type="number" id="exam-input-totalmarks" class="form-control" min="1" max="100" value="20" required>
+            </div>
+            <div class="form-group">
+              <label for="exam-input-passmarks">Passing Marks</label>
+              <input type="number" id="exam-input-passmarks" class="form-control" min="1" max="100" value="10" required>
+            </div>
+            <div class="form-group">
+              <label for="exam-input-status">Availability Status</label>
+              <select id="exam-input-status" class="form-control">
+                <option value="available">Available (Open Now)</option>
+                <option value="upcoming">Upcoming (Scheduled)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="exam-input-instructions">Candidate Instructions (one per line):</label>
+            <textarea id="exam-input-instructions" class="form-control" rows="3" placeholder="Ensure stable internet connection.&#10;Answers are automatically saved.&#10;Timer submits answers automatically on expiry."></textarea>
+          </div>
+
+          <button id="exam-submit-btn" type="submit" class="btn btn-primary">
+            Save Examination
+          </button>
+        </form>
+      </div>
+
+      <!-- Current Examinations List -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Existing Examinations</h3>
+        </div>
+        <div class="table-responsive">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Title</th>
+                <th>Date</th>
+                <th>Duration</th>
+                <th>Questions</th>
+                <th>Marks</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="manage-exams-table-body">
+              <!-- Dynamically populated examination rows with Edit/Delete -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         PAGE 9: Manage Questions (Add MCQs and descriptive questions)
+         ========================================================================= -->
+    <section id="page-manage-questions" hidden>
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">Manage Question Bank</h2>
+          <p class="text-muted" style="margin:0; font-size:0.85rem;">Add Multiple Choice Questions (MCQs) and Descriptive questions to university examinations.</p>
+        </div>
+        <button class="btn btn-secondary btn-sm" type="button" onclick="app.navigateToPage('page-admin-dashboard')">
+          &larr; Back to Admin Dashboard
+        </button>
+      </div>
+
+      <!-- Examination Picker -->
+      <div class="card" style="background:#f7fafc;">
+        <div class="form-row" style="align-items:center;">
+          <div class="form-group" style="margin-bottom:0; flex:1;">
+            <label for="question-exam-select" style="font-weight:700;">Select Target Examination:</label>
+            <select id="question-exam-select" class="form-control" onchange="app.handleQuestionExamChange(this.value)">
+              <!-- Dynamically populated exam options -->
+            </select>
+          </div>
+          <div>
+            <span id="question-exam-meta" class="text-muted" style="font-size:0.9rem;">-</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add New Question Form Card -->
+      <div class="card" style="border-top:3px solid var(--primary);">
+        <div class="card-header">
+          <h3 class="card-title">Add New Question to Selected Examination</h3>
+        </div>
+
+        <form onsubmit="app.handleAddQuestion(event)">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="q-type-select">Question Type</label>
+              <select id="q-type-select" class="form-control" onchange="app.handleQuestionTypeToggle(this.value)">
+                <option value="objective">Objective (Multiple Choice - MCQ)</option>
+                <option value="descriptive">Descriptive (Written Response)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="q-marks-input">Marks Allocated</label>
+              <input type="number" id="q-marks-input" class="form-control" min="1" max="50" value="2" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="q-text-input">Question Statement</label>
+            <textarea id="q-text-input" class="form-control" rows="3" placeholder="Enter the complete question prompt..." required></textarea>
+          </div>
+
+          <!-- Section A: MCQ Specific Fields -->
+          <div id="q-mcq-fields">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="q-opt-a">Option A</label>
+                <input type="text" id="q-opt-a" class="form-control" placeholder="Option A text">
+              </div>
+              <div class="form-group">
+                <label for="q-opt-b">Option B</label>
+                <input type="text" id="q-opt-b" class="form-control" placeholder="Option B text">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="q-opt-c">Option C</label>
+                <input type="text" id="q-opt-c" class="form-control" placeholder="Option C text">
+              </div>
+              <div class="form-group">
+                <label for="q-opt-d">Option D</label>
+                <input type="text" id="q-opt-d" class="form-control" placeholder="Option D text">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="q-correct-opt">Correct Answer Key</label>
+                <select id="q-correct-opt" class="form-control">
+                  <option value="A">Option A</option>
+                  <option value="B">Option B</option>
+                  <option value="C">Option C</option>
+                  <option value="D">Option D</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="q-explanation">Explanation / Solution Notes</label>
+                <input type="text" id="q-explanation" class="form-control" placeholder="Brief rationale for the correct answer">
+              </div>
+            </div>
+          </div>
+
+          <!-- Section B: Descriptive Specific Fields -->
+          <div id="q-desc-fields" hidden>
+            <div class="form-group">
+              <label for="q-maxwords">Recommended Word Limit</label>
+              <input type="number" id="q-maxwords" class="form-control" value="250">
+            </div>
+            <div class="form-group">
+              <label for="q-rubric">Model Answer Key &amp; Examiner Evaluation Rubric</label>
+              <textarea id="q-rubric" class="form-control" rows="3" placeholder="Expected concepts, key terms, and mark distribution breakdown..."></textarea>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-success">
+            + Add Question to Bank
+          </button>
+        </form>
+      </div>
+
+      <!-- Existing Questions in Selected Exam -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Questions in Selected Exam</h3>
+        </div>
+        <div id="manage-questions-list">
+          <!-- Dynamically populated list of existing questions with delete buttons -->
+        </div>
+      </div>
+    </section>
+
+    <!-- =========================================================================
+         PAGE 10: Evaluate Answers (Check descriptive answers and assign marks)
+         ========================================================================= -->
+    <section id="page-evaluate-answers" hidden>
+      <!-- Sub-view 1: Submissions list for evaluation -->
+      <div id="eval-list-container">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Examiner Evaluation Portal</h2>
+            <p class="text-muted" style="margin:0; font-size:0.85rem;">Review candidate descriptive answers, grade with model rubrics, and publish final marks.</p>
+          </div>
+          <button class="btn btn-secondary btn-sm" type="button" onclick="app.handleLogout()">
+            Sign Out
+          </button>
+        </div>
+
+        <h3 style="font-size:1.1rem; margin-bottom:14px;">Candidate Submissions for Evaluation:</h3>
         <div id="examiner-submissions-list">
-          <!-- Dynamically populated submissions table -->
+          <!-- Dynamically populated list of submissions -->
         </div>
-      </fieldset>
-    </section>
+      </div>
 
-    <!-- =========================================================================
-         VIEW 8: Examiner Descriptive Grading Screen
-         ========================================================================= -->
-    <section id="examiner-evaluate-view" hidden>
-      <fieldset>
-        <legend><h2>Candidate Descriptive Evaluation</h2></legend>
-        <p>
-          <button type="button" onclick="app.navigateView('examiner-dashboard')">&larr; Back to Submissions List</button>
-        </p>
-
-        <table border="1" cellpadding="6" cellspacing="0" width="100%">
-          <tr>
-            <td><b>Examination:</b></td>
-            <td id="eval-exam-title">-</td>
-            <td><b>Candidate Details:</b></td>
-            <td id="eval-student-meta">-</td>
-          </tr>
-        </table>
+      <!-- Sub-view 2: Detailed grading form for a specific candidate -->
+      <div id="eval-form-container" class="card" hidden>
+        <div class="card-header">
+          <div>
+            <span class="badge badge-warning" style="margin-bottom:4px;">GRADING IN PROGRESS</span>
+            <h2 id="eval-exam-title" class="card-title" style="margin-top:4px;">Examination Title</h2>
+            <p id="eval-student-meta" class="text-muted" style="margin:0; font-size:0.85rem;">-</p>
+          </div>
+          <button class="btn btn-secondary btn-sm" type="button" onclick="app.closeExaminerGradingForm()">
+            &larr; Back to Submissions List
+          </button>
+        </div>
 
         <input type="hidden" id="eval-submission-id">
 
@@ -411,28 +892,31 @@
             <!-- Dynamically rendered descriptive questions for grading -->
           </div>
 
-          <fieldset>
-            <legend><b>Overall Examiner Remarks</b></legend>
-            <p>
-              <textarea id="eval-general-remarks" rows="3" cols="70" placeholder="Enter overall performance feedback..."></textarea>
-            </p>
-          </fieldset>
+          <div class="card" style="background:#f7fafc; margin-top:16px;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label for="eval-general-remarks">General Examiner Remarks / Overall Assessment:</label>
+              <textarea id="eval-general-remarks" class="form-control" rows="3" placeholder="Enter overall performance feedback..."></textarea>
+            </div>
+          </div>
 
-          <br>
-          <p>
-            <button type="submit"><b>Calculate Final Marks &amp; Publish Result &rarr;</b></button>
-            &nbsp;
-            <button type="button" onclick="app.navigateView('examiner-dashboard')">Cancel</button>
-          </p>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; border-top:1px solid var(--border-color); padding-top:16px;">
+            <button type="button" class="btn btn-secondary" onclick="app.closeExaminerGradingForm()">
+              Cancel
+            </button>
+            <button type="submit" class="btn btn-success" style="padding:10px 24px; font-size:1rem;">
+              Calculate Final Marks &amp; Publish Result &rarr;
+            </button>
+          </div>
         </form>
-      </fieldset>
+      </div>
     </section>
 
   </main>
 
-  <hr>
-  <footer>
-    <p><small>&copy; National University Examination Branch &bull; Online Examination System (Pure Semantic HTML &amp; JS)</small></p>
+  <footer style="background:#ffffff; border-top:1px solid var(--border-color); padding:16px; text-align:center; font-size:0.85rem; color:var(--text-muted);">
+    <div class="container">
+      &copy; National University Examination Branch &bull; Online Examination System &bull; 10 Verified Pages (Student, Admin, Examiner)
+    </div>
   </footer>
 
   <!-- Application Scripts -->
