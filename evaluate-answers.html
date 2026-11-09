@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page 10: Evaluate Answers - University Online Examination System</title>
+  <link id="main-stylesheet" rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- University Header -->
+  <header class="univ-header">
+    <div class="container univ-header-content">
+      <div class="univ-title">
+        <h1>National University Examination Portal</h1>
+        <p>Online Examination, Question Bank &amp; Automated Evaluation System</p>
+      </div>
+      
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <nav id="header-nav-links" class="univ-nav" hidden></nav>
+
+        <div id="header-user-badge" class="user-badge" hidden>
+          <span id="header-user-name">Examiner</span>
+          <span id="header-user-role" class="badge badge-warning">Examiner</span>
+        </div>
+
+        <button id="header-logout-btn" class="btn btn-secondary btn-sm" type="button" onclick="app.handleLogout()">
+          Log Out
+        </button>
+
+        <button id="toggle-styles-btn" class="btn btn-outline btn-sm" style="color:#ffffff; border-color:#ffffff;" type="button" onclick="app.toggleStyles()">
+          Toggle CSS (On/Off)
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 10-Page Directory Bar -->
+  <aside class="page-directory-bar">
+    <strong style="color:#90cdf4;">10-Page Directory:</strong>
+    <a href="login.html" class="page-dir-btn">1. Login / Register</a>
+    <a href="student-dashboard.html" class="page-dir-btn">2. Student Dashboard</a>
+    <a href="exam-instructions.html?examId=EXAM-CS401" class="page-dir-btn">3. Exam Instructions</a>
+    <a href="examination.html?examId=EXAM-CS401" class="page-dir-btn">4. Examination Page</a>
+    <a href="review-submit.html?examId=EXAM-CS401" class="page-dir-btn">5. Review &amp; Submit</a>
+    <a href="results.html" class="page-dir-btn">6. Results Page</a>
+    <span style="color:#a0aec0; margin-left:6px;">Admin:</span>
+    <a href="admin-dashboard.html" class="page-dir-btn">7. Admin Dashboard</a>
+    <a href="manage-exams.html" class="page-dir-btn">8. Manage Examinations</a>
+    <a href="manage-questions.html" class="page-dir-btn">9. Manage Questions</a>
+    <span style="color:#a0aec0; margin-left:6px;">Examiner:</span>
+    <a href="evaluate-answers.html" class="page-dir-btn" style="background:#ffffff; color:#1a202c; font-weight:700;">10. Evaluate Answers</a>
+  </aside>
+
+  <main class="container" style="padding-top: 24px; padding-bottom: 50px;">
+    <!-- PAGE 10: Evaluate Answers -->
+    <!-- Sub-view 1: Submissions list for evaluation -->
+    <div id="eval-list-container">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">Examiner Evaluation Portal (Page 10)</h2>
+          <p class="text-muted" style="margin:0; font-size:0.85rem;">Review candidate descriptive answers, grade with model rubrics, and publish final marks.</p>
+        </div>
+      </div>
+
+      <h3 style="font-size:1.1rem; margin-bottom:14px;">Candidate Submissions for Evaluation:</h3>
+      <div id="examiner-submissions-list">
+        <!-- Dynamically populated list of submissions -->
+      </div>
+    </div>
+
+    <!-- Sub-view 2: Detailed grading form for a specific candidate -->
+    <div id="eval-form-container" class="card" hidden>
+      <div class="card-header">
+        <div>
+          <span class="badge badge-warning" style="margin-bottom:4px;">GRADING IN PROGRESS</span>
+          <h2 id="eval-exam-title" class="card-title" style="margin-top:4px;">Examination Title</h2>
+          <p id="eval-student-meta" class="text-muted" style="margin:0; font-size:0.85rem;">-</p>
+        </div>
+        <button class="btn btn-secondary btn-sm" type="button" onclick="app.closeExaminerForm()">
+          &larr; Back to Submissions List
+        </button>
+      </div>
+
+      <input type="hidden" id="eval-submission-id">
+
+      <form onsubmit="app.handleSaveAndPublishEvaluation(event)">
+        <div id="eval-questions-form">
+          <!-- Dynamically rendered descriptive questions for grading -->
+        </div>
+
+        <div class="card" style="background:#f7fafc; margin-top:16px;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label for="eval-general-remarks">General Examiner Remarks / Overall Assessment:</label>
+            <textarea id="eval-general-remarks" class="form-control" rows="3" placeholder="Enter overall performance feedback..."></textarea>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; border-top:1px solid var(--border-color); padding-top:16px;">
+          <button type="button" class="btn btn-secondary" onclick="app.closeExaminerForm()">
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-success" style="padding:10px 24px; font-size:1rem;">
+            Calculate Final Marks &amp; Publish Result &rarr;
+          </button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <footer style="background:#ffffff; border-top:1px solid var(--border-color); padding:16px; text-align:center; font-size:0.85rem; color:var(--text-muted);">
+    <div class="container">
+      &copy; National University Examination Branch &bull; Online Examination System
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      app.initEvaluateAnswers();
+    });
+  </script>
+</body>
+</html>

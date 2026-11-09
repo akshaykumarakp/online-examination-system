@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page 9: Manage Questions - University Online Examination System</title>
+  <link id="main-stylesheet" rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- University Header -->
+  <header class="univ-header">
+    <div class="container univ-header-content">
+      <div class="univ-title">
+        <h1>National University Examination Portal</h1>
+        <p>Online Examination, Question Bank &amp; Automated Evaluation System</p>
+      </div>
+      
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <nav id="header-nav-links" class="univ-nav" hidden></nav>
+
+        <div id="header-user-badge" class="user-badge" hidden>
+          <span id="header-user-name">Admin</span>
+          <span id="header-user-role" class="badge badge-warning">Admin</span>
+        </div>
+
+        <button id="header-logout-btn" class="btn btn-secondary btn-sm" type="button" onclick="app.handleLogout()">
+          Log Out
+        </button>
+
+        <button id="toggle-styles-btn" class="btn btn-outline btn-sm" style="color:#ffffff; border-color:#ffffff;" type="button" onclick="app.toggleStyles()">
+          Toggle CSS (On/Off)
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 10-Page Directory Bar -->
+  <aside class="page-directory-bar">
+    <strong style="color:#90cdf4;">10-Page Directory:</strong>
+    <a href="login.html" class="page-dir-btn">1. Login / Register</a>
+    <a href="student-dashboard.html" class="page-dir-btn">2. Student Dashboard</a>
+    <a href="exam-instructions.html?examId=EXAM-CS401" class="page-dir-btn">3. Exam Instructions</a>
+    <a href="examination.html?examId=EXAM-CS401" class="page-dir-btn">4. Examination Page</a>
+    <a href="review-submit.html?examId=EXAM-CS401" class="page-dir-btn">5. Review &amp; Submit</a>
+    <a href="results.html" class="page-dir-btn">6. Results Page</a>
+    <span style="color:#a0aec0; margin-left:6px;">Admin:</span>
+    <a href="admin-dashboard.html" class="page-dir-btn">7. Admin Dashboard</a>
+    <a href="manage-exams.html" class="page-dir-btn">8. Manage Examinations</a>
+    <a href="manage-questions.html" class="page-dir-btn" style="background:#ffffff; color:#1a202c; font-weight:700;">9. Manage Questions</a>
+    <span style="color:#a0aec0; margin-left:6px;">Examiner:</span>
+    <a href="evaluate-answers.html" class="page-dir-btn">10. Evaluate Answers</a>
+  </aside>
+
+  <main class="container" style="padding-top: 24px; padding-bottom: 50px;">
+    <!-- PAGE 9: Manage Questions -->
+    <div class="card-header">
+      <div>
+        <h2 class="card-title">Manage Question Bank (Page 9)</h2>
+        <p class="text-muted" style="margin:0; font-size:0.85rem;">Add Multiple Choice Questions (MCQs) and Descriptive questions to university examinations.</p>
+      </div>
+      <a href="admin-dashboard.html" class="btn btn-secondary btn-sm">
+        &larr; Back to Admin Dashboard
+      </a>
+    </div>
+
+    <!-- Examination Picker -->
+    <div class="card" style="background:#f7fafc;">
+      <div class="form-row" style="align-items:center;">
+        <div class="form-group" style="margin-bottom:0; flex:1;">
+          <label for="question-exam-select" style="font-weight:700;">Select Target Examination:</label>
+          <select id="question-exam-select" class="form-control" onchange="app.refreshQuestionList(this.value)">
+            <!-- Dynamically populated exam options -->
+          </select>
+        </div>
+        <div>
+          <span id="question-exam-meta" class="text-muted" style="font-size:0.9rem;">-</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add New Question Form Card -->
+    <div class="card" style="border-top:3px solid var(--primary);">
+      <div class="card-header">
+        <h3 class="card-title">Add New Question to Selected Examination</h3>
+      </div>
+
+      <form onsubmit="app.handleAddQuestionForm(event)">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="q-type-select">Question Type</label>
+            <select id="q-type-select" class="form-control" onchange="app.handleQuestionTypeToggle(this.value)">
+              <option value="objective">Objective (Multiple Choice - MCQ)</option>
+              <option value="descriptive">Descriptive (Written Response)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="q-marks-input">Marks Allocated</label>
+            <input type="number" id="q-marks-input" class="form-control" min="1" max="50" value="2" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="q-text-input">Question Statement</label>
+          <textarea id="q-text-input" class="form-control" rows="3" placeholder="Enter the complete question prompt..." required></textarea>
+        </div>
+
+        <!-- Section A: MCQ Specific Fields -->
+        <div id="q-mcq-fields">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="q-opt-a">Option A</label>
+              <input type="text" id="q-opt-a" class="form-control" placeholder="Option A text">
+            </div>
+            <div class="form-group">
+              <label for="q-opt-b">Option B</label>
+              <input type="text" id="q-opt-b" class="form-control" placeholder="Option B text">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="q-opt-c">Option C</label>
+              <input type="text" id="q-opt-c" class="form-control" placeholder="Option C text">
+            </div>
+            <div class="form-group">
+              <label for="q-opt-d">Option D</label>
+              <input type="text" id="q-opt-d" class="form-control" placeholder="Option D text">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="q-correct-opt">Correct Answer Key</label>
+              <select id="q-correct-opt" class="form-control">
+                <option value="A">Option A</option>
+                <option value="B">Option B</option>
+                <option value="C">Option C</option>
+                <option value="D">Option D</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="q-explanation">Explanation / Solution Notes</label>
+              <input type="text" id="q-explanation" class="form-control" placeholder="Brief rationale for the correct answer">
+            </div>
+          </div>
+        </div>
+
+        <!-- Section B: Descriptive Specific Fields -->
+        <div id="q-desc-fields" hidden>
+          <div class="form-group">
+            <label for="q-maxwords">Recommended Word Limit</label>
+            <input type="number" id="q-maxwords" class="form-control" value="250">
+          </div>
+          <div class="form-group">
+            <label for="q-rubric">Model Answer Key &amp; Examiner Evaluation Rubric</label>
+            <textarea id="q-rubric" class="form-control" rows="3" placeholder="Expected concepts, key terms, and mark distribution breakdown..."></textarea>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-success">
+          + Add Question to Bank
+        </button>
+      </form>
+    </div>
+
+    <!-- Existing Questions in Selected Exam -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Questions in Selected Exam</h3>
+      </div>
+      <div id="manage-questions-list">
+        <!-- Dynamically populated list of existing questions with delete buttons -->
+      </div>
+    </div>
+  </main>
+
+  <footer style="background:#ffffff; border-top:1px solid var(--border-color); padding:16px; text-align:center; font-size:0.85rem; color:var(--text-muted);">
+    <div class="container">
+      &copy; National University Examination Branch &bull; Online Examination System
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      app.initManageQuestions();
+    });
+  </script>
+</body>
+</html>

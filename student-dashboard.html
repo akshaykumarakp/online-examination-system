@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page 2: Student Dashboard - University Online Examination System</title>
+  <link id="main-stylesheet" rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- University Header -->
+  <header class="univ-header">
+    <div class="container univ-header-content">
+      <div class="univ-title">
+        <h1>National University Examination Portal</h1>
+        <p>Online Examination, Question Bank &amp; Automated Evaluation System</p>
+      </div>
+      
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <nav id="header-nav-links" class="univ-nav" hidden></nav>
+
+        <div id="header-user-badge" class="user-badge" hidden>
+          <span id="header-user-name">Student</span>
+          <span id="header-user-role" class="badge badge-info">Student</span>
+        </div>
+
+        <button id="header-logout-btn" class="btn btn-secondary btn-sm" type="button" onclick="app.handleLogout()">
+          Log Out
+        </button>
+
+        <button id="toggle-styles-btn" class="btn btn-outline btn-sm" style="color:#ffffff; border-color:#ffffff;" type="button" onclick="app.toggleStyles()">
+          Toggle CSS (On/Off)
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 10-Page Directory Bar -->
+  <aside class="page-directory-bar">
+    <strong style="color:#90cdf4;">10-Page Directory:</strong>
+    <a href="login.html" class="page-dir-btn">1. Login / Register</a>
+    <a href="student-dashboard.html" class="page-dir-btn" style="background:#ffffff; color:#1a202c; font-weight:700;">2. Student Dashboard</a>
+    <a href="exam-instructions.html?examId=EXAM-CS401" class="page-dir-btn">3. Exam Instructions</a>
+    <a href="examination.html?examId=EXAM-CS401" class="page-dir-btn">4. Examination Page</a>
+    <a href="review-submit.html?examId=EXAM-CS401" class="page-dir-btn">5. Review &amp; Submit</a>
+    <a href="results.html" class="page-dir-btn">6. Results Page</a>
+    <span style="color:#a0aec0; margin-left:6px;">Admin:</span>
+    <a href="admin-dashboard.html" class="page-dir-btn">7. Admin Dashboard</a>
+    <a href="manage-exams.html" class="page-dir-btn">8. Manage Examinations</a>
+    <a href="manage-questions.html" class="page-dir-btn">9. Manage Questions</a>
+    <span style="color:#a0aec0; margin-left:6px;">Examiner:</span>
+    <a href="evaluate-answers.html" class="page-dir-btn">10. Evaluate Answers</a>
+  </aside>
+
+  <main class="container" style="padding-top: 20px; padding-bottom: 50px;">
+    <!-- PAGE 2: Student Dashboard -->
+    <div class="card" style="background:#ffffff; border-left:4px solid var(--primary);">
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
+        <div>
+          <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">STUDENT NAME</div>
+          <div id="profile-student-name" style="font-size:1.1rem; font-weight:700; color:var(--primary);">-</div>
+        </div>
+        <div>
+          <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">ROLL / REG NO.</div>
+          <div id="profile-student-roll" style="font-size:1.05rem; font-weight:600;">-</div>
+        </div>
+        <div>
+          <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">DEPARTMENT</div>
+          <div id="profile-student-dept" style="font-size:1rem; font-weight:600;">-</div>
+        </div>
+        <div>
+          <div style="font-size:0.75rem; color:var(--text-muted); font-weight:700;">SEMESTER</div>
+          <div id="profile-student-sem" style="font-size:1rem; font-weight:600;">-</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section: Available Examinations -->
+    <div class="card-header" style="margin-top:24px;">
+      <h2 class="card-title">Available University Examinations (Page 2)</h2>
+      <span class="text-muted" style="font-size:0.85rem;">Examinations currently open for taking</span>
+    </div>
+    <div id="available-exams-list" class="exam-grid">
+      <!-- Active exams populated by app.js -->
+    </div>
+
+    <!-- Section: Upcoming Examinations -->
+    <div class="card-header" style="margin-top:30px;">
+      <h2 class="card-title">Upcoming Scheduled Examinations</h2>
+      <span class="text-muted" style="font-size:0.85rem;">Examinations scheduled for upcoming dates</span>
+    </div>
+    <div id="upcoming-exams-list" class="exam-grid">
+      <!-- Upcoming exams populated by app.js -->
+    </div>
+  </main>
+
+  <footer style="background:#ffffff; border-top:1px solid var(--border-color); padding:16px; text-align:center; font-size:0.85rem; color:var(--text-muted);">
+    <div class="container">
+      &copy; National University Examination Branch &bull; Online Examination System
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      app.initStudentDashboard();
+    });
+  </script>
+</body>
+</html>

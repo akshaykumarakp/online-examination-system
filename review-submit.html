@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page 5: Review &amp; Submit - University Online Examination System</title>
+  <link id="main-stylesheet" rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- University Header -->
+  <header class="univ-header">
+    <div class="container univ-header-content">
+      <div class="univ-title">
+        <h1>National University Examination Portal</h1>
+        <p>Online Examination, Question Bank &amp; Automated Evaluation System</p>
+      </div>
+      
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <nav id="header-nav-links" class="univ-nav" hidden></nav>
+
+        <div id="header-user-badge" class="user-badge" hidden>
+          <span id="header-user-name">Student</span>
+          <span id="header-user-role" class="badge badge-info">Student</span>
+        </div>
+
+        <button id="toggle-styles-btn" class="btn btn-outline btn-sm" style="color:#ffffff; border-color:#ffffff;" type="button" onclick="app.toggleStyles()">
+          Toggle CSS (On/Off)
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 10-Page Directory Bar -->
+  <aside class="page-directory-bar">
+    <strong style="color:#90cdf4;">10-Page Directory:</strong>
+    <a href="login.html" class="page-dir-btn">1. Login / Register</a>
+    <a href="student-dashboard.html" class="page-dir-btn">2. Student Dashboard</a>
+    <a href="exam-instructions.html?examId=EXAM-CS401" class="page-dir-btn">3. Exam Instructions</a>
+    <a href="examination.html?examId=EXAM-CS401" class="page-dir-btn">4. Examination Page</a>
+    <a href="review-submit.html?examId=EXAM-CS401" class="page-dir-btn" style="background:#ffffff; color:#1a202c; font-weight:700;">5. Review &amp; Submit</a>
+    <a href="results.html" class="page-dir-btn">6. Results Page</a>
+    <span style="color:#a0aec0; margin-left:6px;">Admin:</span>
+    <a href="admin-dashboard.html" class="page-dir-btn">7. Admin Dashboard</a>
+    <a href="manage-exams.html" class="page-dir-btn">8. Manage Examinations</a>
+    <a href="manage-questions.html" class="page-dir-btn">9. Manage Questions</a>
+    <span style="color:#a0aec0; margin-left:6px;">Examiner:</span>
+    <a href="evaluate-answers.html" class="page-dir-btn">10. Evaluate Answers</a>
+  </aside>
+
+  <main class="container" style="padding-top: 24px; padding-bottom: 50px;">
+    <!-- PAGE 5: Review & Submit -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <span class="badge badge-warning" style="margin-bottom:4px;">VERIFICATION STAGE</span>
+          <h2 class="card-title">Review &amp; Confirm Examination Submission (Page 5)</h2>
+          <p class="text-muted" style="margin:0; font-size:0.85rem;">Review your attempt status below. You can return to any question to modify your answers before final submission.</p>
+        </div>
+        <a id="btn-back-to-exam" href="examination.html?examId=EXAM-CS401" class="btn btn-secondary btn-sm">
+          &larr; Back to Examination
+        </a>
+      </div>
+
+      <!-- Summary Statistics Grid -->
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div id="modal-stat-total" class="stat-val">0</div>
+          <div class="stat-label">Total Questions</div>
+        </div>
+        <div class="stat-box" style="border-top:3px solid var(--success);">
+          <div id="modal-stat-answered" class="stat-val" style="color:var(--success);">0</div>
+          <div class="stat-label">Answered</div>
+        </div>
+        <div class="stat-box" style="border-top:3px solid var(--warning);">
+          <div id="modal-stat-unanswered" class="stat-val" style="color:var(--warning);">0</div>
+          <div class="stat-label">Unanswered</div>
+        </div>
+        <div class="stat-box" style="border-top:3px solid var(--review);">
+          <div id="modal-stat-review" class="stat-val" style="color:var(--review);">0</div>
+          <div class="stat-label">Marked for Review</div>
+        </div>
+      </div>
+
+      <div id="review-unanswered-warning" class="status-banner offline" style="margin-bottom:16px; border-radius:6px;" hidden>
+        ⚠️ Warning: You still have <span id="unanswered-count-text">0</span> unanswered questions. Unanswered questions will receive 0 marks.
+      </div>
+
+      <!-- Questions Status Table -->
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Question No.</th>
+              <th>Question Type</th>
+              <th>Marks</th>
+              <th>Current Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="review-modal-question-list">
+            <!-- Dynamically populated summary rows -->
+          </tbody>
+        </table>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-top:20px; border-top:1px solid var(--border-color); padding-top:16px;">
+        <a href="examination.html?examId=EXAM-CS401" class="btn btn-secondary">
+          &larr; Return to Examination to Modify Answers
+        </a>
+        <button id="btn-confirm-final-submit" class="btn btn-danger" style="padding:10px 24px; font-size:1rem;" type="button">
+          Confirm &amp; Finalize Submission &rarr;
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <footer style="background:#ffffff; border-top:1px solid var(--border-color); padding:16px; text-align:center; font-size:0.85rem; color:var(--text-muted);">
+    <div class="container">
+      &copy; National University Examination Branch &bull; Online Examination System
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      app.initReviewSubmitPage();
+    });
+  </script>
+</body>
+</html>

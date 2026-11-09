@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page 7: Admin Dashboard - University Online Examination System</title>
+  <link id="main-stylesheet" rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- University Header -->
+  <header class="univ-header">
+    <div class="container univ-header-content">
+      <div class="univ-title">
+        <h1>National University Examination Portal</h1>
+        <p>Online Examination, Question Bank &amp; Automated Evaluation System</p>
+      </div>
+      
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <nav id="header-nav-links" class="univ-nav" hidden></nav>
+
+        <div id="header-user-badge" class="user-badge" hidden>
+          <span id="header-user-name">Admin</span>
+          <span id="header-user-role" class="badge badge-warning">Admin</span>
+        </div>
+
+        <button id="header-logout-btn" class="btn btn-secondary btn-sm" type="button" onclick="app.handleLogout()">
+          Log Out
+        </button>
+
+        <button id="toggle-styles-btn" class="btn btn-outline btn-sm" style="color:#ffffff; border-color:#ffffff;" type="button" onclick="app.toggleStyles()">
+          Toggle CSS (On/Off)
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 10-Page Directory Bar -->
+  <aside class="page-directory-bar">
+    <strong style="color:#90cdf4;">10-Page Directory:</strong>
+    <a href="login.html" class="page-dir-btn">1. Login / Register</a>
+    <a href="student-dashboard.html" class="page-dir-btn">2. Student Dashboard</a>
+    <a href="exam-instructions.html?examId=EXAM-CS401" class="page-dir-btn">3. Exam Instructions</a>
+    <a href="examination.html?examId=EXAM-CS401" class="page-dir-btn">4. Examination Page</a>
+    <a href="review-submit.html?examId=EXAM-CS401" class="page-dir-btn">5. Review &amp; Submit</a>
+    <a href="results.html" class="page-dir-btn">6. Results Page</a>
+    <span style="color:#a0aec0; margin-left:6px;">Admin:</span>
+    <a href="admin-dashboard.html" class="page-dir-btn" style="background:#ffffff; color:#1a202c; font-weight:700;">7. Admin Dashboard</a>
+    <a href="manage-exams.html" class="page-dir-btn">8. Manage Examinations</a>
+    <a href="manage-questions.html" class="page-dir-btn">9. Manage Questions</a>
+    <span style="color:#a0aec0; margin-left:6px;">Examiner:</span>
+    <a href="evaluate-answers.html" class="page-dir-btn">10. Evaluate Answers</a>
+  </aside>
+
+  <main class="container" style="padding-top: 24px; padding-bottom: 50px;">
+    <!-- PAGE 7: Admin Dashboard -->
+    <div class="card-header">
+      <div>
+        <h2 class="card-title">University Administration Portal (Page 7)</h2>
+        <p class="text-muted" style="margin:0; font-size:0.85rem;">Examination system metrics, candidate performance, and academic controls.</p>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <a href="manage-exams.html" class="btn btn-primary btn-sm">
+          + Manage Examinations (Page 8)
+        </a>
+        <a href="manage-questions.html" class="btn btn-secondary btn-sm">
+          Manage Question Bank (Page 9)
+        </a>
+      </div>
+    </div>
+
+    <!-- Key Statistics Grid -->
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div id="admin-stat-students" class="stat-val">0</div>
+        <div class="stat-label">Registered Students</div>
+      </div>
+      <div class="stat-box">
+        <div id="admin-stat-exams" class="stat-val">0</div>
+        <div class="stat-label">Total Examinations</div>
+      </div>
+      <div class="stat-box">
+        <div id="admin-stat-questions" class="stat-val">0</div>
+        <div class="stat-label">Total Questions</div>
+      </div>
+      <div class="stat-box">
+        <div id="admin-stat-submissions" class="stat-val">0</div>
+        <div class="stat-label">Student Submissions</div>
+      </div>
+      <div class="stat-box">
+        <div id="admin-stat-passrate" class="stat-val">0%</div>
+        <div class="stat-label">Pass Percentage</div>
+      </div>
+    </div>
+
+    <!-- Examinations Overview Table -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Examinations Catalog &amp; Status</h3>
+        <a href="manage-exams.html" class="btn btn-primary btn-sm">
+          Add New Exam
+        </a>
+      </div>
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Title</th>
+              <th>Department</th>
+              <th>Date</th>
+              <th>Duration</th>
+              <th>Questions</th>
+              <th>Total Marks</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="admin-exams-overview-table">
+            <!-- Dynamically populated rows -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Recent Submissions Overview Table -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Recent Submissions &amp; Evaluation Log</h3>
+      </div>
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Submission ID</th>
+              <th>Exam</th>
+              <th>Student</th>
+              <th>Submitted At</th>
+              <th>Score</th>
+              <th>Evaluation Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="admin-recent-submissions-table">
+            <!-- Dynamically populated rows -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <footer style="background:#ffffff; border-top:1px solid var(--border-color); padding:16px; text-align:center; font-size:0.85rem; color:var(--text-muted);">
+    <div class="container">
+      &copy; National University Examination Branch &bull; Online Examination System
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      app.initAdminDashboard();
+    });
+  </script>
+</body>
+</html>

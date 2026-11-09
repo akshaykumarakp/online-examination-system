@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page 1: Login / Register - University Online Examination System</title>
+  <link id="main-stylesheet" rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- University Header -->
+  <header class="univ-header">
+    <div class="container univ-header-content">
+      <div class="univ-title">
+        <h1>National University Examination Portal</h1>
+        <p>Online Examination, Question Bank &amp; Automated Evaluation System</p>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <button id="toggle-styles-btn" class="btn btn-outline btn-sm" style="color:#ffffff; border-color:#ffffff;" type="button" onclick="app.toggleStyles()">
+          Toggle CSS (On/Off)
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 10-Page Directory Bar -->
+  <aside class="page-directory-bar">
+    <strong style="color:#90cdf4;">10-Page Directory:</strong>
+    <a href="login.html" class="page-dir-btn" style="background:#ffffff; color:#1a202c; font-weight:700;">1. Login / Register</a>
+    <a href="student-dashboard.html" class="page-dir-btn">2. Student Dashboard</a>
+    <a href="exam-instructions.html?examId=EXAM-CS401" class="page-dir-btn">3. Exam Instructions</a>
+    <a href="examination.html?examId=EXAM-CS401" class="page-dir-btn">4. Examination Page</a>
+    <a href="review-submit.html?examId=EXAM-CS401" class="page-dir-btn">5. Review &amp; Submit</a>
+    <a href="results.html" class="page-dir-btn">6. Results Page</a>
+    <span style="color:#a0aec0; margin-left:6px;">Admin:</span>
+    <a href="admin-dashboard.html" class="page-dir-btn">7. Admin Dashboard</a>
+    <a href="manage-exams.html" class="page-dir-btn">8. Manage Examinations</a>
+    <a href="manage-questions.html" class="page-dir-btn">9. Manage Questions</a>
+    <span style="color:#a0aec0; margin-left:6px;">Examiner:</span>
+    <a href="evaluate-answers.html" class="page-dir-btn">10. Evaluate Answers</a>
+  </aside>
+
+  <main class="container" style="padding-top: 24px; padding-bottom: 50px;">
+    <!-- PAGE 1: Login / Register (Student authentication) -->
+    <div style="max-width: 500px; margin: 20px auto;" class="card">
+      <div class="card-header">
+        <h2 class="card-title">Portal Authentication (Page 1)</h2>
+      </div>
+
+      <div class="tab-group">
+        <button type="button" id="tab-login-btn" class="tab-btn active" onclick="app.switchAuthTab('login')">
+          Sign In
+        </button>
+        <button type="button" id="tab-register-btn" class="tab-btn" onclick="app.switchAuthTab('register')">
+          Student Registration
+        </button>
+      </div>
+
+      <!-- Login Form -->
+      <div id="auth-login-box">
+        <div id="login-error" class="badge badge-danger" style="display:block; padding:8px; margin-bottom:12px; text-align:center;" hidden></div>
+
+        <form onsubmit="app.handleLogin(event)">
+          <div class="form-group">
+            <label for="login-userid">User ID / Registration No. / Email</label>
+            <input type="text" id="login-userid" class="form-control" placeholder="e.g. STU202601, ADMIN2026, or EXAM2026" required autocomplete="username">
+          </div>
+
+          <div class="form-group">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" class="form-control" placeholder="Enter your password" required autocomplete="current-password">
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width:100%; padding:10px; font-size:1rem;">
+            Sign In to Examination System
+          </button>
+        </form>
+
+        <div style="background:#f7fafc; border:1px dashed var(--border-color); border-radius:6px; padding:12px; margin-top:20px; font-size:0.85rem;">
+          <p style="margin-bottom:6px; font-weight:600;">One-Click Demo Credentials:</p>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-outline btn-sm" onclick="app.fillDemoCredentials('STU202601', 'password123')">
+              Student 1 (Priya)
+            </button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="app.fillDemoCredentials('STU202602', 'password123')">
+              Student 2 (Rahul)
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="app.fillDemoCredentials('ADMIN2026', 'admin123')">
+              Admin (Controller)
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="app.fillDemoCredentials('EXAM2026', 'admin123')">
+              Examiner (Evaluator)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Student Registration Form -->
+      <div id="auth-register-box" hidden>
+        <div id="register-msg" class="badge badge-success" style="display:block; padding:8px; margin-bottom:12px; text-align:center;" hidden></div>
+
+        <form onsubmit="app.handleStudentRegister(event)">
+          <div class="form-group">
+            <label for="reg-name">Full Name</label>
+            <input type="text" id="reg-name" class="form-control" placeholder="e.g. Ananya Sen" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="reg-roll">Roll / Registration No.</label>
+              <input type="text" id="reg-roll" class="form-control" placeholder="e.g. 2026-CS-088" required>
+            </div>
+            <div class="form-group">
+              <label for="reg-semester">Semester</label>
+              <select id="reg-semester" class="form-control">
+                <option value="6th Semester">6th Semester</option>
+                <option value="4th Semester">4th Semester</option>
+                <option value="8th Semester">8th Semester</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="reg-dept">Academic Department</label>
+            <input type="text" id="reg-dept" class="form-control" placeholder="e.g. Computer Science &amp; Engineering" required>
+          </div>
+
+          <div class="form-group">
+            <label for="reg-email">University Email</label>
+            <input type="email" id="reg-email" class="form-control" placeholder="e.g. ananya.sen@university.edu" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="reg-password">Create Password</label>
+              <input type="password" id="reg-password" class="form-control" placeholder="Minimum 6 characters" required>
+            </div>
+            <div class="form-group">
+              <label for="reg-confirm-password">Confirm Password</label>
+              <input type="password" id="reg-confirm-password" class="form-control" placeholder="Re-type password" required>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-success" style="width:100%; padding:10px; font-size:1rem;">
+            Complete Registration &amp; Create Account
+          </button>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <footer style="background:#ffffff; border-top:1px solid var(--border-color); padding:16px; text-align:center; font-size:0.85rem; color:var(--text-muted);">
+    <div class="container">
+      &copy; National University Examination Branch &bull; Online Examination System
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      app.initLoginPage();
+    });
+  </script>
+</body>
+</html>

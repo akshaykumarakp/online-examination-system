@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page 4: Examination Page - University Online Examination System</title>
+  <link id="main-stylesheet" rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- University Header -->
+  <header class="univ-header">
+    <div class="container univ-header-content">
+      <div class="univ-title">
+        <h1>National University Examination Portal</h1>
+        <p>Online Examination, Question Bank &amp; Automated Evaluation System</p>
+      </div>
+      
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <nav id="header-nav-links" class="univ-nav" hidden></nav>
+
+        <div id="header-user-badge" class="user-badge" hidden>
+          <span id="header-user-name">Student</span>
+          <span id="header-user-role" class="badge badge-info">Student</span>
+        </div>
+
+        <button id="toggle-styles-btn" class="btn btn-outline btn-sm" style="color:#ffffff; border-color:#ffffff;" type="button" onclick="app.toggleStyles()">
+          Toggle CSS (On/Off)
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 10-Page Directory Bar -->
+  <aside class="page-directory-bar">
+    <strong style="color:#90cdf4;">10-Page Directory:</strong>
+    <a href="login.html" class="page-dir-btn">1. Login / Register</a>
+    <a href="student-dashboard.html" class="page-dir-btn">2. Student Dashboard</a>
+    <a href="exam-instructions.html?examId=EXAM-CS401" class="page-dir-btn">3. Exam Instructions</a>
+    <a href="examination.html?examId=EXAM-CS401" class="page-dir-btn" style="background:#ffffff; color:#1a202c; font-weight:700;">4. Examination Page</a>
+    <a href="review-submit.html?examId=EXAM-CS401" class="page-dir-btn">5. Review &amp; Submit</a>
+    <a href="results.html" class="page-dir-btn">6. Results Page</a>
+    <span style="color:#a0aec0; margin-left:6px;">Admin:</span>
+    <a href="admin-dashboard.html" class="page-dir-btn">7. Admin Dashboard</a>
+    <a href="manage-exams.html" class="page-dir-btn">8. Manage Examinations</a>
+    <a href="manage-questions.html" class="page-dir-btn">9. Manage Questions</a>
+    <span style="color:#a0aec0; margin-left:6px;">Examiner:</span>
+    <a href="evaluate-answers.html" class="page-dir-btn">10. Evaluate Answers</a>
+  </aside>
+
+  <!-- Connection Status Banner -->
+  <div id="connection-status-banner" class="status-banner" hidden>
+    <span id="connection-status-text">Connection Alert</span>
+  </div>
+
+  <main class="container" style="padding-top: 18px; padding-bottom: 50px;">
+    <!-- PAGE 4: Examination Page -->
+    <!-- Top Sticky Status Bar -->
+    <div class="exam-top-bar">
+      <div>
+        <h2 id="live-exam-title" style="margin:0; font-size:1.15rem;">Exam Title</h2>
+        <div id="exam-autosave-status" class="autosave-status">
+          <span>●</span> Auto-saved
+        </div>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+        <div>
+          <label for="view-mode-select" style="font-size:0.8rem; font-weight:600; color:var(--text-muted); display:block;">Question Display:</label>
+          <select id="view-mode-select" class="form-control" style="padding:4px 8px; font-size:0.85rem;" onchange="app.setExamViewMode(this.value)">
+            <option value="one-by-one">One-by-One Question</option>
+            <option value="all">All Questions View</option>
+          </select>
+        </div>
+
+        <div id="exam-timer" class="timer-box" title="Remaining examination time">
+          <span>⏱ Remaining:</span>
+          <span id="timer-countdown-text">00:00</span>
+        </div>
+
+        <button class="btn btn-danger btn-sm" type="button" onclick="app.goToReviewSubmit()">
+          Review &amp; Submit (Page 5) &rarr;
+        </button>
+      </div>
+    </div>
+
+    <!-- Network Resilience Simulation Bar -->
+    <div style="background:#edf2f7; border-radius:6px; padding:8px 14px; margin-bottom:16px; font-size:0.82rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+      <div>
+        <strong>Network Resilience Testing:</strong>
+        <button id="offline-simulation-btn" class="btn btn-secondary btn-sm" type="button" onclick="app.toggleSimulateOffline()">
+          Simulate Connection Drop
+        </button>
+        <span class="text-muted">(Tests offline answer persistence &amp; auto-sync upon reconnect)</span>
+      </div>
+    </div>
+
+    <!-- Examination Layout (Questions + Palette) -->
+    <div class="exam-layout">
+      <!-- Left: Question Panel -->
+      <div class="question-panel">
+        <div id="single-question-container">
+          <!-- Dynamically populated question text and options -->
+        </div>
+
+        <div id="all-questions-container" hidden>
+          <!-- All questions list -->
+        </div>
+
+        <!-- Question Navigation Buttons -->
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; border-top:1px solid #edf2f7; padding-top:16px; margin-top:20px;">
+          <div style="display:flex; gap:10px;">
+            <button id="btn-prev-question" class="btn btn-secondary" type="button" onclick="app.prevExamQuestion()">
+              &larr; Previous
+            </button>
+            <button id="btn-toggle-review" class="btn btn-secondary" type="button" onclick="app.toggleExamReviewFlag()">
+              ☆ Mark for Review
+            </button>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <button id="btn-next-question" class="btn btn-primary" type="button" onclick="app.nextExamQuestion()">
+              Next Question &rarr;
+            </button>
+            <button class="btn btn-danger" type="button" onclick="app.goToReviewSubmit()">
+              Finish &amp; Review &rarr;
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Question Palette -->
+      <aside class="palette-card">
+        <h3 style="font-size:1rem; margin-bottom:12px; border-bottom:1px solid #edf2f7; padding-bottom:8px;">
+          Question Palette
+        </h3>
+
+        <div id="question-palette-grid" class="palette-grid">
+          <!-- Dynamically generated numbered buttons -->
+        </div>
+
+        <div style="font-size:0.8rem; display:flex; flex-direction:column; gap:6px; border-top:1px solid #edf2f7; padding-top:12px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="width:14px; height:14px; background:var(--success); border-radius:3px; display:inline-block;"></span>
+            <span>Answered (<span id="palette-count-answered">0</span>)</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="width:14px; height:14px; background:var(--warning-bg); border:1px solid #fbd38d; border-radius:3px; display:inline-block;"></span>
+            <span>Not Answered (<span id="palette-count-not-answered">0</span>)</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="width:14px; height:14px; background:var(--review); border-radius:3px; display:inline-block;"></span>
+            <span>Marked for Review (<span id="palette-count-review">0</span>)</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="width:14px; height:14px; background:#edf2f7; border:1px solid #cbd5e0; border-radius:3px; display:inline-block;"></span>
+            <span>Not Visited (<span id="palette-count-not-visited">0</span>)</span>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;">
+          <button class="btn btn-danger" style="width:100%;" type="button" onclick="app.goToReviewSubmit()">
+            Review &amp; Submit Exam
+          </button>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <footer style="background:#ffffff; border-top:1px solid var(--border-color); padding:16px; text-align:center; font-size:0.85rem; color:var(--text-muted);">
+    <div class="container">
+      &copy; National University Examination Branch &bull; Online Examination System
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      app.initExaminationPage();
+    });
+  </script>
+</body>
+</html>

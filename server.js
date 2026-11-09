@@ -21,7 +21,7 @@ const server = http.createServer((req, res) => {
   // Normalize URL path to prevent directory traversal
   let reqPath = req.url.split('?')[0];
   if (reqPath === '/' || reqPath === '') {
-    reqPath = '/index.html';
+    reqPath = '/login.html';
   }
 
   const safePath = path.normalize(reqPath).replace(/^(\.\.[\/\\])+/, '');
