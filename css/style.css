@@ -1,0 +1,1017 @@
+/* ==========================================================================
+   University Online Examination System - Basic CSS Stylesheet
+   Clean, semantic, structured styling for university examination portal
+   ========================================================================== */
+
+/* ---------- 1. CSS Variables & Theme Defaults ---------- */
+:root {
+  --primary: #1a4480;         /* University Navy Blue */
+  --primary-hover: #112e56;
+  --secondary: #4a5568;       /* Slate Grey */
+  --light-bg: #f7fafc;        /* Soft page background */
+  --card-bg: #ffffff;
+  --border-color: #cbd5e0;
+  --text-main: #2d3748;
+  --text-muted: #718096;
+  
+  /* Status Colors */
+  --success: #2e7d32;         /* Answered / Pass / Green */
+  --success-bg: #e8f5e9;
+  --warning: #ed8936;         /* Not Answered / Amber */
+  --warning-bg: #fffaf0;
+  --review: #6b46c1;          /* Marked for Review / Purple */
+  --review-bg: #faf5ff;
+  --danger: #c53030;          /* Time Warning / Fail / Red */
+  --danger-bg: #fff5f5;
+  --info: #2b6cb0;
+  --info-bg: #ebf8ff;
+  
+  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --border-radius: 6px;
+  --shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* ---------- 2. Base Reset & Typography ---------- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--light-bg);
+  color: var(--text-main);
+  line-height: 1.6;
+  font-size: 15px;
+}
+
+h1, h2, h3, h4, h5 {
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+p {
+  margin-bottom: 0.75rem;
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* ---------- 3. Layout Containers ---------- */
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+/* University Header */
+.univ-header {
+  background-color: var(--primary);
+  color: #ffffff;
+  padding: 12px 20px;
+  box-shadow: var(--shadow);
+}
+
+.univ-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.univ-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.univ-title h1 {
+  color: #ffffff;
+  font-size: 1.35rem;
+  margin: 0;
+}
+
+.univ-title p {
+  color: #e2e8f0;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.user-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.12);
+  padding: 6px 14px;
+  border-radius: var(--border-radius);
+  font-size: 0.9rem;
+}
+
+.user-badge span {
+  font-weight: 500;
+}
+
+/* Connection / Status Bar Banner */
+.status-banner {
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  background-color: #ffffff;
+}
+
+.status-banner.offline {
+  background-color: #fed7d7;
+  color: #9b2c2c;
+  font-weight: 600;
+}
+
+.status-banner.reconnected {
+  background-color: #c6f6d5;
+  color: #22543d;
+  font-weight: 600;
+}
+
+/* ---------- 4. Cards & Panels ---------- */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
+}
+
+.card-header {
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.card-title {
+  font-size: 1.2rem;
+  color: var(--primary);
+  margin: 0;
+}
+
+/* ---------- 5. Buttons & Controls ---------- */
+.btn {
+  display: inline-block;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: var(--border-radius);
+  border: 1px solid transparent;
+  cursor: pointer;
+  text-align: center;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.btn-primary {
+  background-color: var(--primary);
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-hover);
+}
+
+.btn-secondary {
+  background-color: #edf2f7;
+  color: var(--secondary);
+  border-color: var(--border-color);
+}
+
+.btn-secondary:hover {
+  background-color: #e2e8f0;
+}
+
+.btn-success {
+  background-color: var(--success);
+  color: #ffffff;
+}
+
+.btn-success:hover {
+  background-color: #27672a;
+}
+
+.btn-warning {
+  background-color: var(--warning);
+  color: #ffffff;
+}
+
+.btn-warning:hover {
+  background-color: #dd6b20;
+}
+
+.btn-danger {
+  background-color: var(--danger);
+  color: #ffffff;
+}
+
+.btn-danger:hover {
+  background-color: #9b2c2c;
+}
+
+.btn-outline {
+  background-color: transparent;
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.btn-outline:hover {
+  background-color: var(--primary);
+  color: #ffffff;
+}
+
+.btn-sm {
+  padding: 4px 10px;
+  font-size: 0.8rem;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ---------- 6. Forms & Inputs ---------- */
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--text-main);
+  font-size: 0.9rem;
+}
+
+.form-control {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 0.95rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-family: inherit;
+  background-color: #ffffff;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(26, 68, 128, 0.15);
+}
+
+textarea.form-control {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.helper-text {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* ---------- 7. Badges & Indicators ---------- */
+.badge {
+  display: inline-block;
+  padding: 3px 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.badge-info {
+  background-color: var(--info-bg);
+  color: var(--info);
+}
+
+.badge-success {
+  background-color: var(--success-bg);
+  color: var(--success);
+}
+
+.badge-warning {
+  background-color: var(--warning-bg);
+  color: var(--warning);
+}
+
+.badge-review {
+  background-color: var(--review-bg);
+  color: var(--review);
+}
+
+.badge-danger {
+  background-color: var(--danger-bg);
+  color: var(--danger);
+}
+
+.badge-secondary {
+  background-color: #edf2f7;
+  color: var(--secondary);
+}
+
+/* ---------- 8. Login View ---------- */
+.login-wrapper {
+  max-width: 440px;
+  margin: 40px auto;
+}
+
+.login-card {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 28px;
+  box-shadow: var(--shadow);
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.login-header h2 {
+  font-size: 1.4rem;
+  margin-bottom: 4px;
+}
+
+.demo-credentials-box {
+  background-color: #f7fafc;
+  border: 1px dashed var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 12px;
+  margin-top: 20px;
+  font-size: 0.85rem;
+}
+
+.demo-credentials-box p {
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.demo-btn-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ---------- 9. Student Dashboard View ---------- */
+.student-profile-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  background-color: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.profile-item-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.profile-item-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.exam-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.exam-card {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-top: 4px solid var(--primary);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: var(--shadow);
+}
+
+.exam-card-title {
+  font-size: 1.15rem;
+  margin-bottom: 6px;
+}
+
+.exam-meta-list {
+  list-style: none;
+  margin: 14px 0;
+  font-size: 0.9rem;
+}
+
+.exam-meta-list li {
+  padding: 4px 0;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px dashed #edf2f7;
+}
+
+.exam-meta-label {
+  color: var(--text-muted);
+}
+
+.exam-meta-val {
+  font-weight: 600;
+}
+
+/* ---------- 10. Exam Instructions View ---------- */
+.instructions-list {
+  margin-left: 20px;
+  margin-bottom: 20px;
+}
+
+.instructions-list li {
+  margin-bottom: 8px;
+}
+
+.instructions-agreement {
+  background-color: var(--info-bg);
+  border-left: 4px solid var(--info);
+  padding: 14px;
+  margin-bottom: 20px;
+  border-radius: 0 var(--border-radius) var(--border-radius) 0;
+}
+
+.instructions-agreement label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ---------- 11. Live Examination Interface ---------- */
+.exam-top-bar {
+  background-color: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 12px 18px;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  position: sticky;
+  top: 10px;
+  z-index: 10;
+  box-shadow: var(--shadow);
+}
+
+.exam-title-display h2 {
+  font-size: 1.15rem;
+  margin: 0;
+}
+
+.timer-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 1.15rem;
+  padding: 6px 14px;
+  background-color: #f7fafc;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  color: var(--primary);
+}
+
+.timer-box.timer-warning {
+  background-color: var(--danger-bg);
+  border-color: var(--danger);
+  color: var(--danger);
+  animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse {
+  from { opacity: 1; }
+  to { opacity: 0.6; }
+}
+
+.autosave-status {
+  font-size: 0.85rem;
+  color: var(--success);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.autosave-status.saving {
+  color: var(--warning);
+}
+
+.autosave-status.offline {
+  color: var(--danger);
+}
+
+/* Main Exam Body: Split View (Question Area + Question Palette) */
+.exam-layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 20px;
+}
+
+@media (max-width: 860px) {
+  .exam-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.question-panel {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 24px;
+  box-shadow: var(--shadow);
+}
+
+.question-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #edf2f7;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+}
+
+.question-number-badge {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--primary);
+}
+
+.question-marks-badge {
+  font-size: 0.85rem;
+  color: var(--secondary);
+  background-color: #edf2f7;
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+.question-text {
+  font-size: 1.05rem;
+  font-weight: 500;
+  margin-bottom: 20px;
+  color: #1a202c;
+  line-height: 1.5;
+}
+
+/* MCQ Options */
+.options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.option-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  background-color: #ffffff;
+  transition: all 0.15s ease;
+}
+
+.option-item:hover {
+  background-color: #f7fafc;
+  border-color: var(--primary);
+}
+
+.option-item.selected {
+  background-color: #ebf8ff;
+  border-color: var(--primary);
+  border-width: 2px;
+  font-weight: 500;
+}
+
+.option-item input[type="radio"] {
+  margin-top: 3px;
+  cursor: pointer;
+}
+
+.option-key {
+  font-weight: 700;
+  color: var(--primary);
+  min-width: 22px;
+}
+
+.option-content {
+  flex: 1;
+}
+
+/* Descriptive Question Input */
+.descriptive-input-container {
+  margin-bottom: 20px;
+}
+
+.word-count-bar {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* Exam Action Buttons */
+.exam-actions-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  border-top: 1px solid #edf2f7;
+  padding-top: 18px;
+  margin-top: 20px;
+}
+
+.nav-buttons-left,
+.nav-buttons-right {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Question Palette (Side Navigation) */
+.palette-card {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+  height: fit-content;
+}
+
+.palette-title {
+  font-size: 1rem;
+  margin-bottom: 14px;
+  border-bottom: 1px solid #edf2f7;
+  padding-bottom: 8px;
+}
+
+.palette-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.palette-btn {
+  aspect-ratio: 1;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color);
+  background-color: #edf2f7;
+  color: var(--text-main);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.15s ease;
+}
+
+.palette-btn:hover {
+  transform: translateY(-1px);
+  border-color: var(--primary);
+}
+
+.palette-btn.current {
+  box-shadow: 0 0 0 2px var(--primary);
+  font-weight: 800;
+}
+
+/* Palette Statuses */
+.palette-btn.status-not-visited {
+  background-color: #edf2f7;
+  color: var(--text-main);
+}
+
+.palette-btn.status-not-answered {
+  background-color: var(--warning-bg);
+  color: #c05621;
+  border-color: #fbd38d;
+}
+
+.palette-btn.status-answered {
+  background-color: var(--success);
+  color: #ffffff;
+  border-color: var(--success);
+}
+
+.palette-btn.status-review {
+  background-color: var(--review);
+  color: #ffffff;
+  border-color: var(--review);
+}
+
+.palette-btn.status-answered-review {
+  background-color: var(--review);
+  color: #ffffff;
+  border-color: var(--review);
+}
+
+.palette-btn.status-answered-review::after {
+  content: "✔";
+  position: absolute;
+  top: 1px;
+  right: 3px;
+  font-size: 9px;
+  color: #a3e635;
+}
+
+/* Palette Legend */
+.palette-legend {
+  font-size: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid #edf2f7;
+  padding-top: 12px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.legend-answered { background-color: var(--success); }
+.legend-not-answered { background-color: var(--warning-bg); border-color: #fbd38d; }
+.legend-review { background-color: var(--review); }
+.legend-not-visited { background-color: #edf2f7; }
+
+/* Simulation Tools Bar (For Testing Offline & Timers) */
+.tools-bar {
+  background: #edf2f7;
+  border-radius: var(--border-radius);
+  padding: 8px 14px;
+  margin-top: 16px;
+  font-size: 0.82rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tools-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ---------- 12. Modal Dialogs ---------- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.modal-card {
+  background: #ffffff;
+  border-radius: var(--border-radius);
+  max-width: 580px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  padding: 24px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 8px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 16px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.stat-box {
+  background: #f7fafc;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 10px;
+  text-align: center;
+}
+
+.stat-box .stat-val {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.stat-box .stat-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* ---------- 13. Results & Evaluation View ---------- */
+.result-header-card {
+  background-color: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.result-badge-large {
+  display: inline-block;
+  padding: 6px 20px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border-radius: 20px;
+  margin: 10px 0;
+}
+
+.score-display {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin: 8px 0;
+}
+
+.table-responsive {
+  overflow-x: auto;
+  margin: 16px 0;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.table th,
+.table td {
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  text-align: left;
+}
+
+.table th {
+  background-color: #edf2f7;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.table tr:hover {
+  background-color: #f7fafc;
+}
+
+/* Review Question Item */
+.review-question-card {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+.review-answer-box {
+  background: #f7fafc;
+  border-left: 3px solid var(--border-color);
+  padding: 10px 14px;
+  margin: 8px 0;
+  font-size: 0.9rem;
+}
+
+.review-answer-box.correct {
+  border-left-color: var(--success);
+  background-color: var(--success-bg);
+}
+
+.review-answer-box.incorrect {
+  border-left-color: var(--danger);
+  background-color: var(--danger-bg);
+}
+
+.examiner-feedback-box {
+  background: #fffaf0;
+  border: 1px dashed var(--warning);
+  border-radius: var(--border-radius);
+  padding: 12px;
+  margin-top: 10px;
+  font-size: 0.88rem;
+}
+
+/* ---------- 14. Examiner Evaluation Portal ---------- */
+.submission-card {
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 16px;
+  margin-bottom: 14px;
+  background: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.eval-input-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+/* ---------- 15. Utility Classes ---------- */
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.text-muted { color: var(--text-muted); }
+.text-danger { color: var(--danger); }
+.text-success { color: var(--success); }
+.d-none { display: none !important; }
+.mt-1 { margin-top: 6px; }
+.mt-2 { margin-top: 12px; }
+.mt-3 { margin-top: 18px; }
+.mb-1 { margin-bottom: 6px; }
+.mb-2 { margin-bottom: 12px; }
+.mb-3 { margin-bottom: 18px; }
+
+/* Print Styles */
+@media print {
+  .univ-header,
+  .btn,
+  .tools-bar,
+  .status-banner {
+    display: none !important;
+  }
+  body {
+    background-color: #ffffff;
+    color: #000000;
+  }
+  .card, .result-header-card {
+    border: none;
+    box-shadow: none;
+  }
+}
+

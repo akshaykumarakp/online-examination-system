@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>University Online Examination System</title>
+</head>
+<body>
+
+  <!-- University Header -->
+  <header>
+    <h1>National University Examination Portal</h1>
+    <p>Online Examination &amp; Automated Evaluation System</p>
+    <div id="header-user-badge" hidden>
+      <p>
+        Signed in as: <b id="header-user-name">User</b> 
+        <span id="header-user-role">[Role]</span>
+        &nbsp;|&nbsp;
+        <button id="header-logout-btn" type="button" onclick="app.handleLogout()">Log Out</button>
+      </p>
+    </div>
+    <hr>
+  </header>
+
+  <!-- Network Connection / Offline Alert Banner -->
+  <div id="connection-status-banner" hidden>
+    <p><b id="connection-status-text">Connection Alert</b></p>
+    <hr>
+  </div>
+
+  <main>
+
+    <!-- =========================================================================
+         VIEW 1: Authentication / Login
+         ========================================================================= -->
+    <section id="login-view">
+      <fieldset>
+        <legend><h2>Candidate &amp; Examiner Login</h2></legend>
+        <p>Please enter your registered university credentials to authenticate.</p>
+
+        <div id="login-error" hidden>
+          <p><b><font color="red" id="login-error-text">Invalid credentials</font></b></p>
+        </div>
+
+        <form onsubmit="app.handleLogin(event)">
+          <p>
+            <label for="login-userid"><b>Student ID / Examiner ID:</b></label><br>
+            <input type="text" id="login-userid" placeholder="e.g. STU202601 or EXAM2026" required autocomplete="username" size="30">
+          </p>
+
+          <p>
+            <label for="login-password"><b>Password:</b></label><br>
+            <input type="password" id="login-password" placeholder="Enter password" required autocomplete="current-password" size="30">
+          </p>
+
+          <p>
+            <button type="submit">Authenticate &amp; Sign In</button>
+          </p>
+        </form>
+
+        <hr>
+        <p><b>Quick Demo Accounts (Click to Fill):</b></p>
+        <p>
+          <button type="button" onclick="app.fillDemoCredentials('STU202601', 'password123')">
+            Demo Student 1 (Priya Sharma - B.Tech CSE)
+          </button>
+          &nbsp;
+          <button type="button" onclick="app.fillDemoCredentials('STU202602', 'password123')">
+            Demo Student 2 (Rahul Verma - B.Tech IT)
+          </button>
+          &nbsp;
+          <button type="button" onclick="app.fillDemoCredentials('EXAM2026', 'admin123')">
+            Examiner (Dr. K. Ramanathan)
+          </button>
+        </p>
+      </fieldset>
+    </section>
+
+    <!-- =========================================================================
+         VIEW 2: Student Dashboard (Available Examinations)
+         ========================================================================= -->
+    <section id="student-dashboard" hidden>
+      <fieldset>
+        <legend><h3>Student Profile</h3></legend>
+        <table border="1" cellpadding="6" cellspacing="0" width="100%">
+          <tr>
+            <td><b>Student Name:</b></td>
+            <td id="profile-student-name">-</td>
+            <td><b>Roll / Reg No:</b></td>
+            <td id="profile-student-roll">-</td>
+          </tr>
+          <tr>
+            <td><b>Department:</b></td>
+            <td id="profile-student-dept">-</td>
+            <td><b>Semester:</b></td>
+            <td id="profile-student-sem">-</td>
+          </tr>
+        </table>
+      </fieldset>
+
+      <br>
+
+      <fieldset>
+        <legend><h3>Available University Examinations</h3></legend>
+        <p>The following examinations are assigned to your profile. Select an examination to view instructions and start.</p>
+        <div id="available-exams-list">
+          <!-- Dynamically populated exam list -->
+        </div>
+      </fieldset>
+    </section>
+
+    <!-- =========================================================================
+         VIEW 3: Examination Instructions
+         ========================================================================= -->
+    <section id="exam-instructions-view" hidden>
+      <fieldset>
+        <legend><h2>Examination Guidelines &amp; Instructions</h2></legend>
+
+        <p>
+          <button type="button" onclick="app.navigateView('student-dashboard')">&larr; Return to Dashboard</button>
+        </p>
+
+        <table border="1" cellpadding="6" cellspacing="0" width="100%">
+          <tr>
+            <td><b>Course Code:</b></td>
+            <td id="inst-exam-code">-</td>
+            <td><b>Course Title:</b></td>
+            <td id="inst-exam-title">-</td>
+          </tr>
+          <tr>
+            <td><b>Duration:</b></td>
+            <td id="inst-exam-duration">-</td>
+            <td><b>Total Questions:</b></td>
+            <td id="inst-exam-questions">-</td>
+          </tr>
+          <tr>
+            <td><b>Total Marks:</b></td>
+            <td id="inst-exam-marks">-</td>
+            <td><b>Passing Marks:</b></td>
+            <td id="inst-exam-pass">-</td>
+          </tr>
+        </table>
+
+        <h3>Instructions to Candidates:</h3>
+        <ol id="inst-instructions-list">
+          <!-- Dynamically populated instructions -->
+        </ol>
+
+        <p>
+          <label>
+            <input type="checkbox" id="inst-agree-checkbox">
+            <b>I have read, understood, and agreed to abide by all the examination rules and university conduct regulations.</b>
+          </label>
+        </p>
+
+        <p>
+          <button id="inst-start-btn" type="button" disabled onclick="app.startExam(false)">
+            Start Examination Now &rarr;
+          </button>
+          &nbsp;
+          <button type="button" onclick="app.navigateView('student-dashboard')">Cancel</button>
+        </p>
+      </fieldset>
+    </section>
+
+    <!-- =========================================================================
+         VIEW 4: Live Examination Interface
+         ========================================================================= -->
+    <section id="active-exam-view" hidden>
+      <!-- Top Status Bar -->
+      <fieldset>
+        <legend><h3>Active Examination</h3></legend>
+        <table border="1" cellpadding="6" cellspacing="0" width="100%">
+          <tr>
+            <td>
+              <b>Exam:</b> <span id="live-exam-title">Examination Title</span>
+            </td>
+            <td>
+              <b>Question Display:</b>
+              <select id="view-mode-select" onchange="app.setViewMode(this.value)">
+                <option value="one-by-one">One-by-One Question</option>
+                <option value="all">All Questions View</option>
+              </select>
+            </td>
+            <td>
+              <b>⏱ Time Remaining:</b> <span id="timer-countdown-text">00:00</span>
+              <span id="timer-warning-label" hidden><b><font color="red"> (WARNING: Time Running Out!)</font></b></span>
+            </td>
+            <td>
+              <b>Auto-Save:</b> <span id="exam-autosave-status">[Auto-saved]</span>
+            </td>
+          </tr>
+        </table>
+
+        <p>
+          <b>Network Resilience Testing:</b>
+          <button id="offline-simulation-btn" type="button" onclick="app.toggleSimulateOffline()">
+            Simulate Connection Drop
+          </button>
+          <i>(Tests offline answer persistence and automatic sync upon reconnect)</i>
+        </p>
+      </fieldset>
+
+      <br>
+
+      <!-- Question and Palette layout using a semantic HTML table -->
+      <table border="1" cellpadding="10" cellspacing="0" width="100%">
+        <tr valign="top">
+          <!-- Left Column: Question Content -->
+          <td width="70%">
+            <!-- Single Question Container -->
+            <div id="single-question-container">
+              <!-- Dynamically populated question text and options -->
+            </div>
+
+            <!-- All Questions View Container -->
+            <div id="all-questions-container" hidden>
+              <!-- Dynamically populated list of all questions -->
+            </div>
+
+            <hr>
+            <p>
+              <button id="btn-prev-question" type="button" onclick="app.previousQuestion()">&larr; Previous Question</button>
+              &nbsp;
+              <button id="btn-toggle-review" type="button" onclick="app.toggleReviewFlag()">☆ Mark for Review</button>
+              &nbsp;
+              <button id="btn-next-question" type="button" onclick="app.nextQuestion()">Next Question &rarr;</button>
+              &nbsp;|&nbsp;
+              <button type="button" onclick="app.openReviewModal()"><b>Review &amp; Submit Examination</b></button>
+            </p>
+          </td>
+
+          <!-- Right Column: Question Palette Navigation -->
+          <td width="30%">
+            <fieldset>
+              <legend><b>Question Palette</b></legend>
+              <p>Click any question number to navigate directly:</p>
+              
+              <div id="question-palette-grid">
+                <!-- Dynamically generated numbered buttons -->
+              </div>
+
+              <hr>
+              <p><b>Palette Legend:</b></p>
+              <ul>
+                <li>[✓ Answered]: <span id="palette-count-answered">0</span></li>
+                <li>[• Not Answered]: <span id="palette-count-not-answered">0</span></li>
+                <li>[? Marked for Review]: <span id="palette-count-review">0</span></li>
+                <li>[  Not Visited]: <span id="palette-count-not-visited">0</span></li>
+              </ul>
+
+              <hr>
+              <p>
+                <button type="button" onclick="app.openReviewModal()">
+                  <b>Finish &amp; Submit Exam</b>
+                </button>
+              </p>
+            </fieldset>
+          </td>
+        </tr>
+      </table>
+    </section>
+
+    <!-- =========================================================================
+         VIEW 5: Review & Confirmation Section
+         ========================================================================= -->
+    <section id="review-submit-modal" hidden>
+      <fieldset>
+        <legend><h2>Review Examination Before Final Submission</h2></legend>
+        <p>Please review your attempt status below. You may modify any answers prior to final submission.</p>
+
+        <table border="1" cellpadding="6" cellspacing="0" width="100%">
+          <tr>
+            <th>Total Questions</th>
+            <th>Answered</th>
+            <th>Unanswered</th>
+            <th>Marked for Review</th>
+          </tr>
+          <tr align="center">
+            <td id="modal-stat-total">0</td>
+            <td><b id="modal-stat-answered">0</b></td>
+            <td><b id="modal-stat-unanswered">0</b></td>
+            <td id="modal-stat-review">0</td>
+          </tr>
+        </table>
+
+        <div id="review-unanswered-warning" hidden>
+          <p>
+            <b><font color="red">⚠️ Warning: You have <span id="unanswered-count-text">0</span> unanswered question(s). Unanswered questions will receive 0 marks.</font></b>
+          </p>
+        </div>
+
+        <h3>Question-by-Question Attempt Summary:</h3>
+        <table border="1" cellpadding="6" cellspacing="0" width="100%">
+          <thead>
+            <tr>
+              <th>Question No.</th>
+              <th>Question Type</th>
+              <th>Current Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="review-modal-question-list">
+            <!-- Dynamically populated summary rows -->
+          </tbody>
+        </table>
+
+        <hr>
+        <p>
+          <button type="button" onclick="app.closeReviewModal()">&larr; Return to Examination to Modify Answers</button>
+          &nbsp;&nbsp;
+          <button type="button" onclick="app.submitExam(false)"><b>Confirm Final Submission</b></button>
+        </p>
+      </fieldset>
+    </section>
+
+    <!-- =========================================================================
+         VIEW 6: Examination Results & Evaluation Record
+         ========================================================================= -->
+    <section id="result-view" hidden>
+      <fieldset>
+        <legend><h2>University Examination Result Card</h2></legend>
+        <h3 id="res-exam-title">Examination Title</h3>
+
+        <table border="1" cellpadding="6" cellspacing="0" width="100%">
+          <tr>
+            <td><b>Candidate:</b></td>
+            <td id="res-student-info">-</td>
+            <td><b>Submission ID:</b></td>
+            <td id="res-submission-id">-</td>
+          </tr>
+          <tr>
+            <td><b>Submission Timestamp:</b></td>
+            <td id="res-submission-time">-</td>
+            <td><b>Submission Mode:</b></td>
+            <td id="res-submission-mode">-</td>
+          </tr>
+          <tr>
+            <td><b>Final Marks:</b></td>
+            <td><b id="res-score-value">0 / 0</b></td>
+            <td><b>Percentage &amp; Result:</b></td>
+            <td>
+              <span id="res-score-percentage">-</span> &nbsp;|&nbsp; 
+              <b id="res-status-badge">RESULT</b>
+            </td>
+          </tr>
+        </table>
+
+        <p id="res-marks-breakdown">
+          <!-- Marks breakdown details -->
+        </p>
+
+        <p>
+          <button type="button" onclick="window.print()">Print / Save Result</button>
+          &nbsp;
+          <button type="button" onclick="app.navigateView('student-dashboard')">Return to Student Dashboard</button>
+        </p>
+      </fieldset>
+
+      <br>
+
+      <fieldset>
+        <legend><h3>Detailed Question-by-Question Evaluation Breakdown</h3></legend>
+        <p><i>Objective questions are evaluated automatically by the system. Descriptive answers are reviewed and scored by the appointed course examiner.</i></p>
+        <div id="res-questions-breakdown">
+          <!-- Detailed questions breakdown -->
+        </div>
+      </fieldset>
+    </section>
+
+    <!-- =========================================================================
+         VIEW 7: Examiner Submissions Dashboard
+         ========================================================================= -->
+    <section id="examiner-dashboard" hidden>
+      <fieldset>
+        <legend><h2>Examiner Evaluation Portal</h2></legend>
+        <p>Review candidate submissions, award descriptive marks, provide evaluation remarks, and publish final results.</p>
+        <p>
+          <button type="button" onclick="app.handleLogout()">Sign Out</button>
+        </p>
+
+        <h3>Candidate Submissions Pending / Completed:</h3>
+        <div id="examiner-submissions-list">
+          <!-- Dynamically populated submissions table -->
+        </div>
+      </fieldset>
+    </section>
+
+    <!-- =========================================================================
+         VIEW 8: Examiner Descriptive Grading Screen
+         ========================================================================= -->
+    <section id="examiner-evaluate-view" hidden>
+      <fieldset>
+        <legend><h2>Candidate Descriptive Evaluation</h2></legend>
+        <p>
+          <button type="button" onclick="app.navigateView('examiner-dashboard')">&larr; Back to Submissions List</button>
+        </p>
+
+        <table border="1" cellpadding="6" cellspacing="0" width="100%">
+          <tr>
+            <td><b>Examination:</b></td>
+            <td id="eval-exam-title">-</td>
+            <td><b>Candidate Details:</b></td>
+            <td id="eval-student-meta">-</td>
+          </tr>
+        </table>
+
+        <input type="hidden" id="eval-submission-id">
+
+        <form onsubmit="app.handleSaveAndPublishEvaluation(event)">
+          <div id="eval-questions-form">
+            <!-- Dynamically rendered descriptive questions for grading -->
+          </div>
+
+          <fieldset>
+            <legend><b>Overall Examiner Remarks</b></legend>
+            <p>
+              <textarea id="eval-general-remarks" rows="3" cols="70" placeholder="Enter overall performance feedback..."></textarea>
+            </p>
+          </fieldset>
+
+          <br>
+          <p>
+            <button type="submit"><b>Calculate Final Marks &amp; Publish Result &rarr;</b></button>
+            &nbsp;
+            <button type="button" onclick="app.navigateView('examiner-dashboard')">Cancel</button>
+          </p>
+        </form>
+      </fieldset>
+    </section>
+
+  </main>
+
+  <hr>
+  <footer>
+    <p><small>&copy; National University Examination Branch &bull; Online Examination System (Pure Semantic HTML &amp; JS)</small></p>
+  </footer>
+
+  <!-- Application Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
