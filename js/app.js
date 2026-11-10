@@ -318,7 +318,17 @@
 
     const exams = getExaminations();
     const submissions = getSubmissions();
+// Update examination overview counts
+const availableCount = exams.filter(exam => exam.status !== 'upcoming').length;
+const upcomingCount = exams.filter(exam => exam.status === 'upcoming').length;
 
+const availableCountEl = document.getElementById('available-exam-count');
+const upcomingCountEl = document.getElementById('upcoming-exam-count');
+const totalCountEl = document.getElementById('total-exam-count');
+
+if (availableCountEl) availableCountEl.textContent = availableCount;
+if (upcomingCountEl) upcomingCountEl.textContent = upcomingCount;
+if (totalCountEl) totalCountEl.textContent = exams.length;
     exams.forEach(exam => {
       const userSubmission = submissions.find(
         s => s.examId === exam.id && s.studentId === user.id
