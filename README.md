@@ -1,6 +1,6 @@
-# Online Examination System
+# Presidency University, Bengaluru - Online Examination System
 
-A comprehensive web-based **Online Examination System** built for university examination branches, covering the complete lifecycle of computer-based testing, question banking, administration, candidate evaluation, and automated result publishing.
+A comprehensive web-based **Online Examination System** built for **Presidency University, Bengaluru**, covering the complete lifecycle of computer-based testing, question banking, administration, candidate evaluation, and automated result publishing.
 
 Features all **10 required pages** across Student, Admin, and Examiner modules with responsive basic styling and native semantic HTML structure.
 

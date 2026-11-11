@@ -1,19 +1,21 @@
 {
   "name": "online-examination-system",
   "version": "1.0.0",
-  "description": "University Online Examination System with auto-save, timer, offline resilience, and automated + manual evaluation",
+  "description": "Presidency University, Bengaluru - Online Examination System with auto-save, timer, offline resilience, and evaluation",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "keywords": [
+    "presidency-university",
+    "bengaluru",
     "online-examination-system",
     "exam-portal",
     "university-exam",
     "auto-save",
     "evaluation"
   ],
-  "author": "University Examination Branch",
+  "author": "Presidency University, Bengaluru - Examination Branch",
   "license": "MIT"
 }
 
