@@ -2,10 +2,161 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0; url=login.html">
-  <title>Online Examination System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login / Register - Presidency University, Bengaluru</title>
+  <link id="main-stylesheet" rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <p>Redirecting to <a href="login.html">Login Page</a>...</p>
+
+  <!-- University Header -->
+  <header class="univ-header">
+    <div class="container univ-header-content">
+      <div class="univ-title">
+        <h1>Presidency University, Bengaluru</h1>
+        <p>Online Examination, Question Bank &amp; Automated Evaluation System</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="padding-top: 24px; padding-bottom: 50px;">
+    <!-- Portal Authentication (Page 1) -->
+    <div style="max-width: 500px; margin: 20px auto;" class="card">
+      <div class="card-header">
+        <h2 class="card-title">Portal Authentication</h2>
+      </div>
+
+      <div class="tab-group">
+        <button type="button" id="tab-login-btn" class="tab-btn active" onclick="app.switchAuthTab('login')">
+          Sign In
+        </button>
+        <button type="button" id="tab-register-btn" class="tab-btn" onclick="app.switchAuthTab('register')">
+          Student Registration
+        </button>
+      </div>
+
+      <!-- Login Form -->
+      <div id="auth-login-box">
+        <div id="login-error" class="badge badge-danger" style="display:block; padding:8px; margin-bottom:12px; text-align:center;" hidden></div>
+
+        <form onsubmit="app.handleLogin(event)">
+          <div class="form-group">
+            <label for="login-userid">User ID / Registration No. / Email</label>
+            <input type="text" id="login-userid" class="form-control" placeholder="e.g. STU202601, ADMIN2026, or EXAM2026" required autocomplete="username">
+          </div>
+
+          <div class="form-group">
+            <label for="login-password">Password</label>
+            <input type="password" id="login-password" class="form-control" placeholder="Enter your password" required autocomplete="current-password">
+
+            <button type="button" onclick="togglePasswordVisibility()"
+              style="margin-top:8px; padding:6px 12px; cursor:pointer; border:1px solid #cbd5e0; border-radius:5px; background:#ffffff;">
+              Show Password
+            </button>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width:100%; padding:10px; font-size:1rem;">
+            Sign In to Examination System
+          </button>
+        </form>
+
+        <div style="background:#f7fafc; border:1px dashed var(--border-color); border-radius:6px; padding:12px; margin-top:20px; font-size:0.85rem;">
+          <p style="margin-bottom:6px; font-weight:600;">One-Click Demo Credentials:</p>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-outline btn-sm" onclick="app.fillDemoCredentials('STU202601', 'password123')">
+              Student 1 (Priya)
+            </button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="app.fillDemoCredentials('STU202602', 'password123')">
+              Student 2 (Rahul)
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="app.fillDemoCredentials('ADMIN2026', 'admin123')">
+              Admin (Controller)
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="app.fillDemoCredentials('EXAM2026', 'admin123')">
+              Examiner (Evaluator)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Student Registration Form -->
+      <div id="auth-register-box" hidden>
+        <div id="register-msg" class="badge badge-success" style="display:block; padding:8px; margin-bottom:12px; text-align:center;" hidden></div>
+
+        <form onsubmit="app.handleStudentRegister(event)">
+          <div class="form-group">
+            <label for="reg-name">Full Name</label>
+            <input type="text" id="reg-name" class="form-control" placeholder="e.g. Ananya Sen" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="reg-roll">Roll / Registration No.</label>
+              <input type="text" id="reg-roll" class="form-control" placeholder="e.g. 2026-CS-088" required>
+            </div>
+            <div class="form-group">
+              <label for="reg-semester">Semester</label>
+              <select id="reg-semester" class="form-control">
+                <option value="6th Semester">6th Semester</option>
+                <option value="4th Semester">4th Semester</option>
+                <option value="8th Semester">8th Semester</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="reg-dept">Academic Department</label>
+            <input type="text" id="reg-dept" class="form-control" placeholder="e.g. Computer Science &amp; Engineering" required>
+          </div>
+
+          <div class="form-group">
+            <label for="reg-email">University Email</label>
+            <input type="email" id="reg-email" class="form-control" placeholder="e.g. ananya.sen@presidencyuniversity.in" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="reg-password">Create Password</label>
+              <input type="password" id="reg-password" class="form-control" placeholder="Minimum 6 characters" required>
+            </div>
+            <div class="form-group">
+              <label for="reg-confirm-password">Confirm Password</label>
+              <input type="password" id="reg-confirm-password" class="form-control" placeholder="Re-type password" required>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-success" style="width:100%; padding:10px; font-size:1rem;">
+            Complete Registration &amp; Create Account
+          </button>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <footer style="background:#ffffff; border-top:1px solid var(--border-color); padding:16px; text-align:center; font-size:0.85rem; color:var(--text-muted);">
+    <div class="container">
+      &copy; Presidency University, Bengaluru &bull; Examination Branch &bull; Online Examination System
+    </div>
+  </footer>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    function togglePasswordVisibility() {
+      const password = document.getElementById('login-password');
+      const button = event.currentTarget;
+
+      if (password.type === 'password') {
+        password.type = 'text';
+        button.textContent = 'Hide Password';
+      } else {
+        password.type = 'password';
+        button.textContent = 'Show Password';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      app.initLoginPage();
+    });
+  </script>
 </body>
 </html>
